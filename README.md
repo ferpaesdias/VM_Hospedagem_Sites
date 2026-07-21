@@ -11,8 +11,8 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - **Serviço WEB**: Nginx
 - **Serviço FTP**: ProFTP
 
-***
 <br/>
+***
 
 ## Características
 
@@ -25,8 +25,8 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - Os alunos não terão acesso via SSH.
 - Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome.
 
-***
 <br/>
+***
 
 ## Passo-a-passo
 
@@ -35,8 +35,8 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - [ ] Configurar o Nginx
 - [ ] Configurar o FTP
   
-***
 <br/>
+***
 
 ## Segurança 
 
