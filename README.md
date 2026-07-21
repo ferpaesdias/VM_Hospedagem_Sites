@@ -12,6 +12,7 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - **Serviço FTP**: ProFTP
 
 <br/>
+
 ***
 
 ## Características
@@ -26,21 +27,17 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome.
 
 <br/>
+
 ***
 
-## Passo-a-passo
+## Cookbook
 
-- [ ] Subir uma VM Debian
-- [ ] Instalar o Nginx
-- [ ] Configurar o Nginx
-- [ ] Configurar o FTP
+- Subir uma VM Debian: Se virá no Youtube. 
+- [Instalar e configurar o Nginx](Cookbook/Instalar_configurar_Nginx.md).
+- [Instalar e configurar o FTP](Cookbook/Instalar_configurar_FTP.md).
+- Criar, modificar e remover usuários do Linux (somente docentes).
+- Criar, modificar e remover usuários do FTP (docentes e alunos).
   
 <br/>
+
 ***
-
-## Segurança 
-
-- [ ] Sem acesso `root`, usar `sudo`.
-- [ ] Desativar acesso SSH via `root`.
-- [ ] Desativar acesso SSH via senha, usar chave criptográfica.  
-
