@@ -1,4 +1,4 @@
-![Not By AI](https://shields.io)
+
 
 # VM para hospedagem de Sites
 
