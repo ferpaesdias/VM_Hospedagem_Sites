@@ -11,16 +11,21 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - **Serviço WEB**: Nginx
 - **Serviço FTP**: ProFTP
 
+***
 <br/>
 
 ## Características
 
-- O acesso do site do aluno deverá ser: 
+- O acesso do site do aluno deverá ser:  `http://Endereço_IP_VM/Turma/Nome_Aluno`.
 
-   http://Endereço_IP_VM/Nome_Aluno.
+- Os arquivos dos sites deverão ser salvos em um disco montado no diretório `/sites`.
+- Os arquivos dos sites deverão ser salvos no seguinte padrão: `/sites/turma/nome_aluno`.
+- Os docentes terão acesso via SSH e acesso administrativo usando o `sudo`.
+- Os alunos terão acesso somente ao seu diretório via FTP.
+- Os alunos não terão acesso via SSH.
+- Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome.
 
-
-
+***
 <br/>
 
 ## Passo-a-passo
@@ -30,7 +35,7 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - [ ] Configurar o Nginx
 - [ ] Configurar o FTP
   
-
+***
 <br/>
 
 ## Segurança 
