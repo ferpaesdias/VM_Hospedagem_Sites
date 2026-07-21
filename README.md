@@ -1,3 +1,5 @@
+![Not By AI](https://shields.io)
+
 # VM para hospedagem de Sites
 
 Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
