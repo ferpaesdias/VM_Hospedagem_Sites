@@ -25,16 +25,17 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 
 ## Passo-a-passo
 
-- Subir uma VM Debian
-- Instalar o Nginx
-- Configurar o Nginx
-- Configurar o FTP
+- [ ] Subir uma VM Debian
+- [ ] Instalar o Nginx
+- [ ] Configurar o Nginx
+- [ ] Configurar o FTP
   
 
 <br/>
 
 ## Segurança 
 
-- Desativar acesso SSH via `root`.
-- Desativar acesso SSH via senha.  
+- [ ] Sem acesso `root`, usar `sudo`.
+- [ ] Desativar acesso SSH via `root`.
+- [ ] Desativar acesso SSH via senha, usar chave criptográfica.  
 
