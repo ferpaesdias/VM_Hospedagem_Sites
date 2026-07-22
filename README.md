@@ -1,6 +1,7 @@
-
-
 # VM para hospedagem de Sites
+
+[![Made by Human](https://madebyhuman.iamjarl.com/badges/made-white.svg)](https://madebyhuman.iamjarl.com)
+
 
 Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
 
