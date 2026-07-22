@@ -3,10 +3,12 @@
 
 Passos necessários:
 
-1. Atualizar sistema e instalar softwares necessários
-2. Particionar disco
-3. Formatar disco
-4. Montar disco
+- [Configurar o Sistema Operacional](#configurar-o-sistema-operacional)
+	- [1. Atualizar sistema e instalar softwares necessários](#1-atualizar-sistema-e-instalar-softwares-necessários)
+	- [2. Particionar disco](#2-particionar-disco)
+	- [3. Formatar disco](#3-formatar-disco)
+	- [4. Montar disco](#4-montar-disco)
+		- [Montar o disco de forma permanente](#montar-o-disco-de-forma-permanente)
 
 **Obs**.: Considere que a VM já tenha um disco adicional configurado.
 
