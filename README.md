@@ -1,6 +1,6 @@
 # VM para hospedagem de Sites
 
-![Static Badge](https://img.shields.io/badge/No_AI-Made_By_Human-blue)
+![Static Badge](https://img.shields.io/badge/No_AI-Made_By_Humans-blue)
 ![Static Badge](https://img.shields.io/badge/Testes-Confia%20no%20pai-Green)
 
 
