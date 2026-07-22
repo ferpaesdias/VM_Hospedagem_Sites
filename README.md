@@ -1,6 +1,10 @@
 # VM para hospedagem de Sites
 
-[![Made by Human](https://madebyhuman.iamjarl.com/badges/made-white.svg)](https://madebyhuman.iamjarl.com)
+![Static Badge](https://img.shields.io/badge/No_AI-Made_By_Human-blue)
+![Static Badge](https://img.shields.io/badge/Teste-Confia%20no%20pai-Green)
+
+
+
 
 
 Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
