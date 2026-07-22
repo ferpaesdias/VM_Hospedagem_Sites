@@ -8,10 +8,12 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 
 ## Infraestrutura
 
+- **Sistema Operacional**: Debian 13 (Trixie)
 - **Hostname**: vm-webserver
 - **Hypervisor**: Hyper-V
 - **Serviço WEB**: Nginx
 - **Serviço FTP**: ProFTP
+
 
 <br/>
 
@@ -20,7 +22,6 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 ## Características
 
 - O acesso do site do aluno deverá ser:  `http://Endereço_IP_VM/Turma/Nome_Aluno`.
-
 - Os arquivos dos sites deverão ser salvos em um disco montado no diretório `/sites`.
 - Os arquivos dos sites deverão ser salvos no seguinte padrão: `/sites/turma/nome_aluno`.
 - Os docentes terão acesso via SSH e acesso administrativo usando o `sudo`.
@@ -34,7 +35,7 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 
 ## Cookbook
 
-- Subir uma VM Debian: Se virá no Youtube. 
+- [Configurar o Sistema Operacional](Cookbook/Configurar_Sistema_Operacional.md).
 - [Instalar e configurar o Nginx](Cookbook/Instalar_configurar_Nginx.md).
 - [Instalar e configurar o FTP](Cookbook/Instalar_configurar_FTP.md).
 - Criar, modificar e remover usuários do Linux (somente docentes).
