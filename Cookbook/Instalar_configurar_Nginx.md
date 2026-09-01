@@ -5,7 +5,7 @@ Passos necessários:
 
 - [Instalar e configurar o Nginx](#instalar-e-configurar-o-nginx)
   - [1. Atualizar sistema e instalar softwares necessários](#1-atualizar-sistema-e-instalar-softwares-necessários)
-  - [2. Configurar o Nginx para usar o diretório /sites](#2-configurar-o-nginx-para-usar-o-diretório-sites)
+  - [2. Configurar o Nginx para usar o diretório /projetos](#2-configurar-o-nginx-para-usar-o-diretório-projetos)
 
 **Obs**.: Considere que a VM já tenha um disco adicional configurado.
 
@@ -25,32 +25,36 @@ sudo apt install -y nginx curl
 
 *** 
 
-## 2. Configurar o Nginx para usar o diretório /sites
+## 2. Configurar o Nginx para usar o diretório /projetos
 
-Renomeie o arquivo `/etc/nginx/sites-available/default`
-
-```bash
-sudo mv -v /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bkp
-```
+Crie o arquivo `/etc/nginx/sites-available/projetos`
 
 <br/>
 
-Crie novamente o arquivo `/etc/nginx/sites-available/default` com o conteúdo abaixo:
+Crie novamente o arquivo `/etc/nginx/sites-available/projetos` com o conteúdo abaixo:
 
 ```bash
 server {
-        listen 80 default_server;
-        listen [::]:80 default_server;
+    listen 80 default_server;
+    listen [::]:80 default_server;
 
-        root /sites;
+    server_name _;                 # O "_" responde por IP (qualquer host)
 
-        index index.html index.htm index.nginx-debian.html;
+    root /projetos;
+    index index.html index.htm;
 
-        server_name _;
+    # roteia turmaXX/aluno/ automaticamente pelo sistema de arquivos
+    location / {
 
-        location / {
-                try_files $uri $uri/ =404;
-        }
+        # Opção que não lista o conteúdo dos diretórios    
+        autoindex off;
+        try_files $uri $uri/ =404;
+    }
+
+    # bloqueia arquivos ocultos (.git, .env, .htpasswd, etc.)
+    location ~ /\. {
+        deny all;
+    }
 }
 ```
 
@@ -73,4 +77,4 @@ $ curl localhost
 Teste Site Default
 ```
 
-Se retornar a mensagem `Teste Site Default` siginifica que o Nginx está OK.
+Se retornar a mensagem `Teste Site Default` significa que o Nginx está OK.
