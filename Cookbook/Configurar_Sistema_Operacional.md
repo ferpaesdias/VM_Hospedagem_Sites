@@ -100,18 +100,18 @@ Writing superblocks and filesystem accounting information: done
 
 ## 4. Montar disco
 
-Crie o diretório `/sites`
+Crie o diretório `/projetos`
 
 ```bash
-sudo mkdir /sites
+sudo mkdir /projetos
 ```
 
 <br/>
 
-Monte o disco no diretório `/sites` de forma provisória para teste:
+Monte o disco no diretório `/projetos` de forma provisória para teste:
 
 ```bash
-sudo mount /dev/sdb1 /sites
+sudo mount /dev/sdb1 /projetos
 ```
 
 <br/>
@@ -125,9 +125,9 @@ udev            937M     0  937M   0% /dev
 tmpfs           196M  592K  195M   1% /run
 /dev/sda2        18G  1,3G   16G   8% /
 ...
-/dev/sdb1       9,8G  2,1M  9,3G   1% /sites
+/dev/sdb1       9,8G  2,1M  9,3G   1% /projetos
 ```
-Tem que aparecer um linha semelhante a `/dev/sdb1       9,8G  2,1M  9,3G   1% /sites`.
+Tem que aparecer um linha semelhante a `/dev/sdb1       9,8G  2,1M  9,3G   1% /projetos`.
 
 <br/>
 
@@ -195,7 +195,7 @@ udev            937M     0  937M   0% /dev
 tmpfs           196M  600K  195M   1% /run
 /dev/sda2        18G  1,3G   16G   8% /
 ...
-/dev/sdb1       9,8G  2,1M  9,3G   1% /sites
+/dev/sdb1       9,8G  2,1M  9,3G   1% /projetos
 ```
-Novamente, tem que aparecer um linha semelhante a `/dev/sdb1       9,8G  2,1M  9,3G   1% /sites`.
+Novamente, tem que aparecer um linha semelhante a `/dev/sdb1       9,8G  2,1M  9,3G   1% /projetos`.
 
