@@ -5,8 +5,6 @@
 
 
 
-
-
 Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
 
 <br/>
@@ -26,9 +24,9 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 
 ## Características
 
-- O acesso do site do aluno deverá ser:  `http://Endereço_IP_VM/Turma/Nome_Aluno`.
-- Os arquivos dos sites deverão ser salvos em um disco montado no diretório `/sites`.
-- Os arquivos dos sites deverão ser salvos no seguinte padrão: `/sites/turma/nome_aluno`.
+- O acesso do site do aluno deverá ser:  `http://[IP]/Turma[XX]/Nome_Aluno`.
+- Os arquivos dos sites deverão ser salvos em um disco montado no diretório `/projetos`.
+- Os arquivos dos sites deverão ser salvos no seguinte padrão: `/projetos/turma[XX]/nome_aluno`.
 - Os docentes terão acesso via SSH e acesso administrativo usando o `sudo`.
 - Os alunos terão acesso somente ao seu diretório via FTP.
 - Os alunos não terão acesso via SSH.
