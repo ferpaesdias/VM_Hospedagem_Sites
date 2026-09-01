@@ -15,7 +15,7 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - **Hostname**: vm-webserver
 - **Hypervisor**: Hyper-V
 - **Serviço WEB**: Nginx
-- **Serviço FTP**: ProFTP
+- **Serviço FTP**: vsftpd
 
 
 <br/>
