@@ -9,7 +9,6 @@ Passos necessários:
   - [4. Serviço Nginx](#4-serviço-nginx)
   - [5. Testes](#5-testes)
 
-**Obs**.: Considere que a VM já tenha um disco adicional configurado.
 
 <br/>
 
@@ -29,9 +28,9 @@ sudo apt install -y nginx curl
 
 ## 2. Configurar o Nginx para usar o diretório /projetos
 
-Será usado o diretório `/projetos` criados em [Instalar e configurar o Nginx](Configurar_Sistema_Operacional.md).
+Será usado o diretório `/projetos` criados em [Configurar o Sistema Operacional](Configurar_Sistema_Operacional.md).
 
-Crie novamente o arquivo `/etc/nginx/sites-available/projetos` com o conteúdo abaixo:
+Crie o arquivo `/etc/nginx/sites-available/projetos` com o conteúdo abaixo:
 
 ```bash
 server {
@@ -43,7 +42,6 @@ server {
     root /projetos;
     index index.html index.htm;
 
-    # roteia turmaXX/aluno/ automaticamente pelo sistema de arquivos
     location / {
 
         # Opção que não lista o conteúdo dos diretórios    
@@ -57,6 +55,7 @@ server {
     }
 }
 ```
+<br/>
 
 Crie um link simbólico do arquivo `/etc/nginx/sites-available/projetos` em `/etc/nginx/sites-enabled/`:
 
@@ -100,7 +99,7 @@ Permitir acesso total ao usuário `root` e leitura e execução para o usuário 
 
 ```bash
 chown root:www-data /projetos
-chmod 750 /projetos
+chmod 751 /projetos
 ```
 Obs.: `www-data` é o usuário padrão do Nginx. 
 
