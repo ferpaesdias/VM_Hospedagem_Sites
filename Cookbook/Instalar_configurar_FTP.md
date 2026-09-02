@@ -7,8 +7,6 @@ Passos necessários:
   - [2. Configurar o vsftpd](#2-configurar-o-vsftpd)
   - [3. Criação de usuários](#3-criação-de-usuários)
 
-**Obs**.: Considere que a VM já tenha um disco adicional configurado.
-
 <br/>
 
 *** 
@@ -66,25 +64,16 @@ allow_writeable_chroot=YES
 ```
 <br/>
 
-*** 
 
 ## 3. Criação de usuários
 
-
-Criar o usuário `aluno01`
-
-```bash
-useradd --no-create-home --home /projetos/turma01/aluno01 --shell /usr/sbin/nologin aluno01 
-``` 
-
-<br/>
 
 Criar o diretório `/projetos/turma01`. Neste diretório ficará as pastas HOME dos usuários.
 
 ```bash
 mkdir -p /projetos/turma01
 chown root:www-data /projetos/turma01/
-chmod 751 /projetos /projetos/turma01
+chmod 751 /projetos/turma01
 ```
 
 <br/>
@@ -98,6 +87,7 @@ chmod 2750 /projetos/turma01/aluno01
 ```
 Obs.: No comando `chmod`, o número `2` significa que os arquivos e subpastas criados ali irá herdar o grupo do diretório, em ver de herdar o grupo do usuário que criou.
 
+<br/>
 
 Criar uma shell restrita para as contas dos alunos. 
 
@@ -129,3 +119,12 @@ Adicionar o shell ao arquivo `/etc/shells`
 echo '/bin/shell_ftp' >> /etc/shells
 ```
 
+<br/>
+
+Criar o usuário `aluno01`
+
+```bash
+useradd --no-create-home --home /projetos/turma01/aluno01 --shell /usr/sbin/nologin aluno01 
+``` 
+
+<br/>
