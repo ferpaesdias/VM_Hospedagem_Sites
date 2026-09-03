@@ -36,7 +36,7 @@ Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arq
 - Os docentes terão acesso via SSH e acesso administrativo usando o `sudo`.
 - Os alunos terão acesso somente ao seu diretório via FTP.
 - Os alunos não terão acesso via SSH.
-- Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome.
+- Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome. Exemplo: O usuário do aluno **Fulano da Silva**, que possui o email **fulano.dsilva@senac.sp.br**, será **fulanodsilva**.
 
 <br/>
 
