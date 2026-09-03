@@ -4,8 +4,11 @@
 ![Static Badge](https://img.shields.io/badge/Testes-Confia%20no%20pai-Green?style=for-the-badge)
 ![Static Badge](https://img.shields.io/badge/Trabalho_em_Progresso-Homem_trabalhando-red?style=for-the-badge)
 
+<br/>
 
+***
 
+<br/>
 
 Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
 
