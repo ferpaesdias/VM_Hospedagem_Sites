@@ -1,7 +1,5 @@
 # VM para Hospedagem de Sites
 
-![Cookbook](https://img.shields.io/badge/Cookbook-Handmade-green?style=for-the-badge)
-![README](https://img.shields.io/badge/README-AI_Assisted-blue?style=for-the-badge)
 ![Status](https://img.shields.io/badge/Status-Em_Constru%C3%A7%C3%A3o-orange?style=for-the-badge)
 
 Configuração de uma VM Debian para hospedagem de sites desenvolvidos por alunos, com envio de arquivos via FTP. Cada aluno possui um usuário isolado no sistema e uma URL pública sob o padrão `http://[IP]/turmaXX/nome_aluno/`.
@@ -121,5 +119,3 @@ Guias de instalação e configuração, na ordem recomendada de leitura:
 **Fernando Paes Dias** — Instrutor em cursos técnicos de Redes de Computadores e Manutenção e Suporte de Informática.
 
 ---
-
-*README organizado com auxílio de IA local (Qwen 3 8B via Ollama) e revisado manualmente. Os guias do Cookbook são elaborados à mão a partir da configuração real da VM.*
