@@ -1,55 +1,125 @@
-# VM para hospedagem de Sites
+# VM para Hospedagem de Sites
 
-![Static Badge](https://img.shields.io/badge/No_AI-Made_By_Humans-blue?style=for-the-badge)   
-![Static Badge](https://img.shields.io/badge/Testes-Confia%20no%20pai-Green?style=for-the-badge)   
-![Static Badge](https://img.shields.io/badge/Trabalho_em_Progresso-Homem_trabalhando-red?style=for-the-badge)   
+![Cookbook](https://img.shields.io/badge/Cookbook-Handmade-green?style=for-the-badge)
+![README](https://img.shields.io/badge/README-AI_Assisted-blue?style=for-the-badge)
+![Status](https://img.shields.io/badge/Status-Em_Constru%C3%A7%C3%A3o-orange?style=for-the-badge)
 
-<br/>
+Configuração de uma VM Debian para hospedagem de sites desenvolvidos por alunos, com envio de arquivos via FTP. Cada aluno possui um usuário isolado no sistema e uma URL pública sob o padrão `http://[IP]/turmaXX/nome_aluno/`.
 
-***
+O projeto é utilizado em contexto educacional, onde estudantes publicam seus projetos web ao longo do curso.
 
-<br/>
-
-Configuração de uma VM para a hospedagem de sites pelos alunos. O envio os arquivos será via FTP.
-
-<br/>
+---
 
 ## Infraestrutura
 
-- **Sistema Operacional**: Debian 13 (Trixie)
-- **Hostname**: vm-webserver
-- **Hypervisor**: Hyper-V
-- **Serviço WEB**: Nginx
-- **Serviço FTP**: vsftpd
+- **Sistema Operacional:** Debian 13 (Trixie)
+- **Hostname:** `vm-webserver`
+- **Hypervisor:** Hyper-V
+- **Servidor Web:** Nginx
+- **Servidor FTP:** vsftpd
+- **Diretório dos sites:** disco dedicado montado em `/projetos`
 
+---
 
-<br/>
+## Arquitetura
 
-***
+```mermaid
+flowchart LR
+    Aluno[Aluno] -->|FTP| VSFTPD[vsftpd]
+    VSFTPD --> DIR[/projetos/turmaXX/nome_aluno/]
+    DIR --> NGINX[Nginx]
+    NGINX -->|HTTP| Visitante[Visitante do site]
 
-## Características
+    Docente[Docente] -->|SSH + sudo| SSHD[sshd]
+    Docente -->|FTP| VSFTPD
+```
 
-- O acesso do site do aluno deverá ser:  `http://[IP]/Turma[XX]/Nome_Aluno`.
-- Os arquivos dos sites deverão ser salvos em um disco montado no diretório `/projetos`.
-- Os arquivos dos sites deverão ser salvos no seguinte padrão: `/projetos/turma[XX]/nome_aluno`.
-- Cada aluno terá o seu usuário no Linux. Este usuário não terá shell e o diretório HOME será `/projetos/turma[XX]/nome_aluno`. 
-- Os docentes terão acesso via SSH e acesso administrativo usando o `sudo`.
-- Os alunos terão acesso somente ao seu diretório via FTP.
-- Os alunos não terão acesso via SSH.
-- Os usuários dos docentes (SSH e FTP) e dos alunos (FTP) serão o mesmo da primeira parte do e-mail educacional (sem o domínio), porém, sem o ponto separando o nome e sobrenome. Exemplo: O usuário do aluno **Fulano da Silva**, que possui o email **fulano.dsilva@senac.sp.br**, será **fulanodsilva**.
+- Alunos enviam arquivos exclusivamente via FTP, isolados no próprio `HOME`.
+- Docentes têm acesso SSH com `sudo` e acesso FTP para manutenção.
+- Nginx serve os arquivos publicamente sob o caminho da turma e do aluno.
 
-<br/>
+---
 
-***
+## Convenções
+
+### Estrutura de diretórios
+
+Os sites ficam organizados por turma, e dentro de cada turma por aluno:
+
+```
+/projetos/
+├── turma01/
+│   ├── nome_aluno_1/    ← HOME do aluno + raiz do site
+│   ├── nome_aluno_2/
+│   └── ...
+├── turma02/
+│   └── ...
+```
+
+O diretório do aluno é simultaneamente:
+
+- O `HOME` do usuário Linux dele
+- A raiz do site publicada pelo Nginx
+
+Não há subdiretório `site/` ou `public/` intermediário.
+
+### Nomenclatura de usuários
+
+O login (Linux/FTP) é derivado do e-mail educacional, removendo o domínio e o ponto entre nome e sobrenome.
+
+Exemplo:
+
+| Aluno | E-mail | Login |
+|---|---|---|
+| Fulano da Silva | `fulano.dsilva@escola.edu.br` | `fulanodsilva` |
+
+Esta convenção vale tanto para alunos quanto para docentes.
+
+### Política de acesso
+
+| Perfil | SSH | Shell | Sudo | FTP |
+|---|---|---|---|---|
+| Docente | ✅ | ✅ | ✅ | ✅ |
+| Aluno | ❌ | ❌ (`/usr/sbin/nologin`) | ❌ | ✅ (chroot no próprio HOME) |
+
+---
 
 ## Cookbook
 
-- [Configurar o Sistema Operacional](Cookbook/Configurar_Sistema_Operacional.md).
-- [Instalar e configurar o Nginx](Cookbook/Instalar_configurar_Nginx.md).
-- [Instalar e configurar o FTP](Cookbook/Instalar_configurar_FTP.md).
-- Criar, modificar e remover usuários do Linux (somente docentes).
-- Criar, modificar e remover usuários do FTP (docentes e alunos).
-  
-<br/>
+Guias de instalação e configuração, na ordem recomendada de leitura:
 
-***
+1. [Configurar o Sistema Operacional](Cookbook/Configurar_Sistema_Operacional.md)
+2. [Instalar e configurar o Nginx](Cookbook/Instalar_configurar_Nginx.md)
+3. [Instalar e configurar o FTP](Cookbook/Instalar_configurar_FTP.md)
+4. Gerenciar usuários Linux (docentes) — **[PENDENTE]**
+5. Gerenciar usuários FTP (docentes e alunos) — **[PENDENTE]**
+
+---
+
+## Estado atual
+
+- [x] Configuração do Sistema Operacional
+- [x] Instalação e configuração do Nginx
+- [x] Instalação e configuração do FTP (vsftpd)
+- [ ] Configuração de TLS sobre FTP (FTPS) — planejado para etapa futura
+- [ ] Guia de gerenciamento de usuários do Linux
+- [ ] Guia de gerenciamento de usuários do FTP
+- [ ] Scripts de automação para criação e remoção de contas de aluno
+
+---
+
+## Notas de design
+
+- **FTP é o protocolo escolhido**, não SFTP. Sugestões de reestruturação para SFTP/jail não se aplicam a este projeto.
+- O acesso dos alunos é confinado por `chroot` do vsftpd ao próprio `HOME`.
+- ⚠️ **Nesta etapa o FTP está sem TLS.** As credenciais trafegam em texto claro. Uso restrito a rede confiável até a implementação do FTPS (ver "Estado atual").
+
+---
+
+## Autor
+
+**Fernando Paes Dias** — Instrutor em cursos técnicos de Redes de Computadores e Manutenção e Suporte de Informática.
+
+---
+
+*README organizado com auxílio de IA local (Qwen 3 8B via Ollama) e revisado manualmente. Os guias do Cookbook são elaborados à mão a partir da configuração real da VM.*
