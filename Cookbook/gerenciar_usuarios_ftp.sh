@@ -9,7 +9,7 @@
 ###  O usuário permite que o aluno faça o upload do seu projeto (site) via 
 ###  FTP.
 ### 
-###  O diretório Home do usuário será o diretório /projetos/turma/nome_do_aluno
+###  O diretório Home do usuário será o diretório /projetos/turmaXX/nome_aluno/
 ### 
 ###  O diretório Home será onde o aluno fará o upload dos arquivos e onde 
 ###  estará hospedado o seu projeto.
