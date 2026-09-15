@@ -60,7 +60,6 @@ NOME_TURMA=$2
 NOME_ALUNO=$3
 ARQUIVO_LOG="vm_hospedagem.log"
 
-
 #### ------------------------------------------------------
 #### Função que imprime mensagem informativa formatada.
 #### Os logs vão para o arquivo vm_hospedagem.log
@@ -70,8 +69,9 @@ function log_erro() {
   local data_hora
   data_hora=$(date '+[%Y-%m-%d %H:%M:%S]')
   printf "%s [ERRO] %s\n" "${data_hora}" "${mensagem_erro}" >> ${ARQUIVO_LOG}
+  echo -e "\n$mensagem_erro"   #TODO: Remover está linha
+  exit 1
 }
-
 
 #### ------------------------------------------------------
 #### Função que imprime mensagem informativa formatada.
@@ -83,9 +83,9 @@ function log_info() {
   local data_hora
   data_hora=$(date '+[%Y-%m-%d %H:%M:%S]')
   printf "%s [INFO] %s\n" "${data_hora}" "${mensagem_info}" >> ${ARQUIVO_LOG}
+  echo "$mensagem_info"   #TODO: Remover está linha
   # TODO: Ajustar a permissão do arquivo de log para quando o usuário não for root 
 }
-
 
 #### ------------------------------------------------------
 #### Função que verifica se o usuário é root
@@ -94,12 +94,80 @@ function log_info() {
 function checar_root() {
   if [[ $EUID -ne 0 ]]; then
   log_erro "Este script deve ser executado como root."
-  echo "Erro: Este script deve ser executado como root."
-  exit 1
 fi
 }
-checar_root
 
+#### ------------------------------------------------------
+#### Função que cria o shell do usuário FTP
+#### ------------------------------------------------------
+function criar_shell_ftp() {
+  local arquivo_shell="/bin/shell_ftp"
+
+  # Verifica se o arquivo shell_ftp já existe
+  if [ -f ${arquivo_shell} ]; then
+    log_info "O arquivo ${arquivo_shell} existe"
+  else
+    echo "O arquivo ${arquivo_shell} não existe, criando o arquivo"
+    echo -e '#!/bin/sh\n\necho "Esta conta é apenas para upload via FTP."\nsleep 3' > ${arquivo_shell}
+  fi
+
+  # Verifica se o arquivo existe e atribui permissão de execução ao arquivo
+  echo -e "\nSetando permissão no arquivo ${arquivo_shell}"
+  [ -f ${arquivo_shell} ] && chmod +x ${arquivo_shell}
+
+  # Adiciona o shell no arquivo de Shells do sistema
+  echo -e "\nAdicionando o novo shell no arquivo /etc/shells"
+  grep --quiet "${arquivo_shell}" /etc/shells || echo "${arquivo_shell}" >> /etc/shells
+}
+
+#### ------------------------------------------------------
+#### Função que cria uma turma e o diretório 
+#### /projetos/[turma]/
+#### ------------------------------------------------------
+function criar_turma() {
+  local nome_turma=$1
+
+  echo -e "\nCriando o arquivo /projetos/${nome_turma}"
+  mkdir -p /projetos/"${nome_turma}"
+  chown root:www-data /projetos/"${nome_turma}"
+  chmod 751 /projetos/"${nome_turma}"
+}
+
+#### ------------------------------------------------------
+#### Função que cria um usuário e o diretório Home
+#### ------------------------------------------------------
+function criar_usuario() {
+  local nome_turma=$1
+  local nome_usuario=$2
+  local senha_usuario="123"
+  local arquivo_shell="/bin/shell_ftp"
+  
+  # Verifica se o usuário já existe
+  if id "$nome_usuario" > /dev/null 2>&1 ; then
+    log_info "$nome_usuario: Este usuário já existe!" 
+
+    # verifica se o Home está seguindo o padrão do sistema
+    local usuario_home
+    usuario_home=$(getent passwd "$nome_usuario" | cut -d: -f 6)
+    local usuario_shell
+    usuario_shell=$(getent passwd "$nome_usuario" | cut -d: -f 7)
+    if [ "$usuario_home" != /projetos/"${nome_turma}"/"${nome_usuario}" ] || \
+       [ "$usuario_shell" != "${arquivo_shell}" ]; then
+      log_erro "O diretório HOME ou o SHELL do usuário estão fora do padrão.\nVerifique e execute o script novamente"
+    fi
+  fi
+
+  # Criando o usuário
+  echo -e "\nCriando o usuário ${nome_usuario}"
+  useradd --no-create-home --home /projetos/"${nome_turma}"/"${nome_usuario}" \
+          --shell ${arquivo_shell} "${nome_usuario}"
+  echo "${nome_usuario}:${senha_usuario}" | chpasswd        
+
+  # Criando o diretório HOME do usuário e configurando permissões 
+  mkdir -p /projetos/"${nome_turma}"/"${nome_usuario}"
+  chown "${nome_usuario}":www-data /projetos/"${nome_turma}"/"${nome_usuario}"
+  chmod 2750 /projetos/"${nome_turma}"/"${nome_usuario}"
+}
 
 #### ------------------------------------------------------
 #### Função que verifica qual é a opção 
@@ -109,15 +177,39 @@ checar_root
 function verifica_opcao() {
   local opcao_comando
   opcao_comando=$1
+  local nome_turma
+  nome_turma=$2
+  local nome_aluno
+  nome_aluno=$3
+
+  case $opcao_comando in
+    --add)
+      criar_turma "$nome_turma";
+      criar_usuario "$nome_turma" "$nome_aluno"
+      ;;
+
+
+    --rm)       definir_opcao "rm";       shift ;;
+    
+    --add-csv)  definir_opcao "add-csv";  shift ;;
+    
+    --rm-csv)   definir_opcao "add-rm";   shift ;;
+
+
+  esac
 }
 
-### TODO: Continuar aqui
+#### ------------------------------------------------------
+#### Executando as funções
+#### ------------------------------------------------------
+checar_root
+criar_shell_ftp
+verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
 
 
 
 
-
-# -------------------------------------------
+#     --add)-----------------------------
 
 # # Função que valida o nome da turma (somente letras e/ou números)
 # function validar_nome_turma() {
