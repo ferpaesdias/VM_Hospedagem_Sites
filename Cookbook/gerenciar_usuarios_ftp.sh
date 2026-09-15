@@ -33,8 +33,10 @@
 ###    $ ./gerenciar_usuarios_ftp --add turma nome_do_aluno
 ###
 ###  Remover um único aluno:
+###    - Todos os projetos do aluno serão perdidos, não tem como recuperar
+###    - Se for o último aluno da turma o diretório /projetos/[turma] será removido
 ###    $ ./gerenciar_usuarios_ftp --rm turma nome_do_aluno
-###
+###           
 ###  Criar vários alunos de uma vez a partir de um arquivo CSV:
 ###    $ ./gerenciar_usuarios_ftp --add-csv arquivo.csv
 ###
@@ -134,7 +136,7 @@ function criar_turma() {
 }
 
 #### ------------------------------------------------------
-#### Função que cria um usuário e o diretório Home
+#### Função que cria um usuário e o diretório HOME
 #### ------------------------------------------------------
 function criar_usuario() {
   local nome_turma=$1
@@ -146,7 +148,7 @@ function criar_usuario() {
   if id "$nome_usuario" > /dev/null 2>&1 ; then
     log_info "$nome_usuario: Este usuário já existe!" 
 
-    # verifica se o Home está seguindo o padrão do sistema
+    # verifica se o HOME está seguindo o padrão do sistema
     local usuario_home
     usuario_home=$(getent passwd "$nome_usuario" | cut -d: -f 6)
     local usuario_shell
@@ -170,6 +172,29 @@ function criar_usuario() {
 }
 
 #### ------------------------------------------------------
+#### Função que remove um usuário e o seu diretório HOME
+#### ------------------------------------------------------
+function remover_usuario() {
+  local nome_turma=$1
+  local nome_usuario=$2
+  local usuario_home
+  usuario_home="/projetos/${nome_turma}/${nome_usuario}"
+  
+  # Verifica se o usuário já existe e, caso exista, o remove
+  if id "$nome_usuario" > /dev/null 2>&1 ; then
+    deluser --remove-home "$nome_usuario" 
+  fi
+
+  # Confere se o diretório HOME do usuário foi removido
+  if [ -d "$usuario_home" ]; then
+    rm -rf "$usuario_home"
+  fi
+
+  # Verifica se o diretório da turma está vazio e, caso esteja, o remove
+  rmdir "/projetos/${nome_turma}" 2>/dev/null
+}
+
+#### ------------------------------------------------------
 #### Função que verifica qual é a opção 
 #### (--add, --rm, --add-csv, --rm-csv)
 #### ------------------------------------------------------
@@ -188,8 +213,9 @@ function verifica_opcao() {
       criar_usuario "$nome_turma" "$nome_aluno"
       ;;
 
-
-    --rm)       definir_opcao "rm";       shift ;;
+    --rm)
+      remover_usuario "$nome_turma" "$nome_aluno";       
+      ;;
     
     --add-csv)  definir_opcao "add-csv";  shift ;;
     
@@ -202,8 +228,8 @@ function verifica_opcao() {
 #### ------------------------------------------------------
 #### Executando as funções
 #### ------------------------------------------------------
-checar_root
-criar_shell_ftp
+# checar_root       TODO: Remover comentários    
+# criar_shell_ftp   TODO: Remover comentários
 verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
 
 
