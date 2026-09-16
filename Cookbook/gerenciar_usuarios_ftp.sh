@@ -85,7 +85,7 @@ function log_info() {
   local data_hora
   data_hora=$(date '+[%Y-%m-%d %H:%M:%S]')
   printf "%s [INFO] %s\n" "${data_hora}" "${mensagem_info}" >> ${ARQUIVO_LOG}
-  echo "$mensagem_info"   #TODO: Remover está linha
+  echo -e "\n$mensagem_info"   #TODO: Remover está linha
   # TODO: Ajustar a permissão do arquivo de log para quando o usuário não for root 
 }
 
@@ -121,6 +121,20 @@ function criar_shell_ftp() {
   echo -e "\nAdicionando o novo shell no arquivo /etc/shells"
   grep --quiet "${arquivo_shell}" /etc/shells || echo "${arquivo_shell}" >> /etc/shells
 }
+
+#### ------------------------------------------------------
+#### Função que valida o nome da turma 
+#### Deve ter somente letras e/ou números
+#### ------------------------------------------------------
+function validar_nome_turma() {
+  local nome_da_turma=$1
+  if [[ ! $nome_da_turma =~ ^[a-zA-Z0-9]+$ ]]; then
+    log_erro "Nome da turma inválido: \"${nome_da_turma}\". Use apenas letras e números."
+  fi
+}
+validar_nome_turma "$NOME_TURMA"
+
+# # -------------------------------------------
 
 #### ------------------------------------------------------
 #### Função que cria uma turma e o diretório 
@@ -209,6 +223,7 @@ function verifica_opcao() {
 
   case $opcao_comando in
     --add)
+      validar_nome_turma "$nome_turma"
       criar_turma "$nome_turma";
       criar_usuario "$nome_turma" "$nome_aluno"
       ;;
@@ -237,19 +252,7 @@ verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
 
 #     --add)-----------------------------
 
-# # Função que valida o nome da turma (somente letras e/ou números)
-# function validar_nome_turma() {
-#   local nome_da_turma
-#   nome_da_turma=$1
-#   if [[ ! $nome_da_turma =~ ^[a-zA-Z0-9]+$ ]]; then
-#     log_erro "Nome da turma inválido: ${nome_da_turma}. Use apenas letras e números."
-#     echo -e "\nErro: Nome da turma inválido: ${nome_da_turma}. \nUse apenas letras e números."
-#     exit 1
-#   fi
-# }
-# validar_nome_turma "$NOME_TURMA"
 
-# # -------------------------------------------
 
 # # Função que valida o nome do aluno (somente letras e/ou números) 
 # function validar_nome_aluno() { 
