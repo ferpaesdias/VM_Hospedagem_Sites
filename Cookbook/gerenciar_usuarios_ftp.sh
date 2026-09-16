@@ -96,8 +96,8 @@ function log_info() {
 
 function checar_root() {
   if [[ $EUID -ne 0 ]]; then
-  log_erro "Este script deve ser executado como root."
-fi
+    log_erro "Este script deve ser executado como root."
+  fi
 }
 
 #### ------------------------------------------------------
