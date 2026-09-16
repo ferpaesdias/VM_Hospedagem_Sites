@@ -132,9 +132,6 @@ function validar_nome_turma() {
     log_erro "Nome da turma inválido: \"${nome_da_turma}\". Use apenas letras e números."
   fi
 }
-validar_nome_turma "$NOME_TURMA"
-
-# # -------------------------------------------
 
 #### ------------------------------------------------------
 #### Função que cria uma turma e o diretório 
@@ -147,6 +144,17 @@ function criar_turma() {
   mkdir -p /projetos/"${nome_turma}"
   chown root:www-data /projetos/"${nome_turma}"
   chmod 751 /projetos/"${nome_turma}"
+}
+
+#### ------------------------------------------------------
+#### Função que valida o nome do usuário
+#### Deve ter somente letras e/ou números
+#### ------------------------------------------------------
+function validar_nome_aluno() { 
+  local nome_da_aluno=$1
+  if [[ ! $nome_da_aluno =~ ^[a-zA-Z0-9]+$ ]]; then
+    log_erro "Nome do aluno inválido: \"${nome_da_aluno}\". Use apenas letras e números."
+  fi
 }
 
 #### ------------------------------------------------------
@@ -223,8 +231,9 @@ function verifica_opcao() {
 
   case $opcao_comando in
     --add)
-      validar_nome_turma "$nome_turma"
+      validar_nome_turma "$nome_turma";
       criar_turma "$nome_turma";
+      validar_nome_aluno "$nome_aluno";
       criar_usuario "$nome_turma" "$nome_aluno"
       ;;
 
@@ -247,24 +256,6 @@ function verifica_opcao() {
 # criar_shell_ftp   TODO: Remover comentários
 verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
 
-
-
-
-#     --add)-----------------------------
-
-
-
-# # Função que valida o nome do aluno (somente letras e/ou números) 
-# function validar_nome_aluno() { 
-#   local nome_da_aluno=$1
-#   if [[ ! $nome_da_aluno =~ ^[a-zA-Z0-9]+$ ]]; then
-#     log_erro "Nome do aluno inválido: ${nome_da_aluno}. Use apenas letras e números."
-#     echo -e "\nErro: Nome da turma inválido: ${nome_da_aluno}. \nUse apenas letras e números."
-#     exit 1
-#   fi
-# }
-
-# validar_nome_aluno "$NOME_ALUNO"
 
 # -------------------------------------------
 
