@@ -90,7 +90,8 @@ function log_info() {
 }
 
 #### ------------------------------------------------------
-#### Função que verifica se o usuário é root
+#### Função que verifica se o que está executando o 
+#### script é root
 #### ------------------------------------------------------
 
 function checar_root() {
@@ -105,20 +106,17 @@ fi
 function criar_shell_ftp() {
   local arquivo_shell="/bin/shell_ftp"
 
-  # Verifica se o arquivo shell_ftp já existe
-  if [ -f ${arquivo_shell} ]; then
-    log_info "O arquivo ${arquivo_shell} existe"
-  else
+ # Verifica se o arquivo shell_ftp já existe, se não existe ele é criado
+  if [[ ! -f "/bin/shell_ftp" ]]; then
     echo "O arquivo ${arquivo_shell} não existe, criando o arquivo"
-    echo -e '#!/bin/sh\n\necho "Esta conta é apenas para upload via FTP."\nsleep 3' > ${arquivo_shell}
+    echo -e '#!/bin/sh\n\necho "Esta conta é apenas para upload via FTP."\nsleep 3' > \
+      ${arquivo_shell}
   fi
 
   # Verifica se o arquivo existe e atribui permissão de execução ao arquivo
-  echo -e "\nSetando permissão no arquivo ${arquivo_shell}"
   [ -f ${arquivo_shell} ] && chmod +x ${arquivo_shell}
 
   # Adiciona o shell no arquivo de Shells do sistema
-  echo -e "\nAdicionando o novo shell no arquivo /etc/shells"
   grep --quiet "${arquivo_shell}" /etc/shells || echo "${arquivo_shell}" >> /etc/shells
 }
 
@@ -231,10 +229,12 @@ function verifica_opcao() {
 
   case $opcao_comando in
     --add)
-      validar_nome_turma "$nome_turma";
-      criar_turma "$nome_turma";
-      validar_nome_aluno "$nome_aluno";
-      criar_usuario "$nome_turma" "$nome_aluno"
+      checar_root
+      criar_shell_ftp
+      # validar_nome_turma "$nome_turma";
+      # criar_turma "$nome_turma";
+      # validar_nome_aluno "$nome_aluno";
+      # criar_usuario "$nome_turma" "$nome_aluno"
       ;;
 
     --rm)
@@ -252,8 +252,6 @@ function verifica_opcao() {
 #### ------------------------------------------------------
 #### Executando as funções
 #### ------------------------------------------------------
-# checar_root       TODO: Remover comentários    
-# criar_shell_ftp   TODO: Remover comentários
 verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
 
 
