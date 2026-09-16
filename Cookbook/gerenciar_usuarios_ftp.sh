@@ -121,6 +121,25 @@ function criar_shell_ftp() {
 }
 
 #### ------------------------------------------------------
+#### Função que exibe ajuda caso o usuário digite --help ou -h
+#### ------------------------------------------------------
+function exibir_ajuda() { 
+  echo -e "\nExemplos de Uso:"
+  echo "  Criar um usuário"
+  echo "    gerenciar_usuarios_ftp --add turma nome_do_aluno"
+  echo ""
+  echo "  Criar usuário com um arquivo .csv"
+  echo "    gerenciar_usuarios_ftp --add-csv arquivo.csv" 
+  echo ""
+  echo "Opções:"
+  echo "  --add               Adiciona um aluno ao servidor FTP"
+  echo "  --rm                Remove um aluno do servidor FTP"
+  echo "  --add-csv arquivo   Lê os alunos de um arquivo CSV (turma,nome_aluno)"
+  echo "  --rm-csv arquivo    Lê os alunos de um arquivo CSV (turma,nome_aluno)"
+  echo "  --help, -h          Exibe esta mensagem de ajuda"
+}
+
+#### ------------------------------------------------------
 #### Função que valida o nome da turma 
 #### Deve ter somente letras e/ou números
 #### ------------------------------------------------------
@@ -231,10 +250,10 @@ function verifica_opcao() {
     --add)
       checar_root
       criar_shell_ftp
-      # validar_nome_turma "$nome_turma";
-      # criar_turma "$nome_turma";
-      # validar_nome_aluno "$nome_aluno";
-      # criar_usuario "$nome_turma" "$nome_aluno"
+      validar_nome_turma "$nome_turma";
+      criar_turma "$nome_turma";
+      validar_nome_aluno "$nome_aluno";
+      criar_usuario "$nome_turma" "$nome_aluno"
       ;;
 
     --rm)
@@ -244,8 +263,20 @@ function verifica_opcao() {
     --add-csv)  definir_opcao "add-csv";  shift ;;
     
     --rm-csv)   definir_opcao "add-rm";   shift ;;
+      -h|--help)
+        exibir_ajuda
+        exit 0
+        ;;
 
+      -*)
+        echo -e "\nOpção desconhecida: $1"
+        exibir_ajuda
+        ;;
 
+      *)
+        echo -e "\nArgumento inesperado: $1"
+        exibir_ajuda
+        ;;
   esac
 }
 
@@ -253,31 +284,6 @@ function verifica_opcao() {
 #### Executando as funções
 #### ------------------------------------------------------
 verifica_opcao "$OPCAO" "$NOME_TURMA" "$NOME_ALUNO"
-
-
-# -------------------------------------------
-
-# # Função que exibe ajuda caso o usuário digite --help ou -h
-# function exibir_ajuda() { 
-  
-#   echo "Uso: $0 [--add | --rm] [--csv arquivo.csv] turma nome_aluno"
-#   echo "       $0 --help"
-#   echo ""
-#   echo "Opções:"
-#   echo "  --add           Adiciona um aluno ao servidor FTP"
-#   echo "  --rm            Remove um aluno do servidor FTP"
-#   echo "  --csv arquivo   Lê os alunos de um arquivo CSV (turma,nome_aluno)"
-#   echo "  --help, -h      Exibe esta mensagem de ajuda"
-# }
-
-# # Verifica se o usuário digitou --help ou -h
-# if [[ "$1" == "--help" || "$1" == "-h" ]]; then
-#   exibir_ajuda
-#   exit 0
-# fi
-
-# # -------------------------------------------
-
 
 # # # -------------------------------------------
 
