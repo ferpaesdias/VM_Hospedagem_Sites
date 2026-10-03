@@ -117,9 +117,9 @@ Toda conta de aluno nasce com a senha `123@mudar`, e o painel obriga a troca no 
 Clone o repositório na VM. Todos os guias executam os comandos a partir da raiz dele:
 
 ```bash
-sudo apt install -y git
-git clone https://github.com/<usuario>/<repositorio>.git
-cd <repositorio>
+apt install -y git
+git clone https://github.com/ferpaesdias/VM_Hospedagem_Sites.git
+cd VM_Hospedagem_Sites
 ```
 
 Depois, siga os guias do Cookbook na ordem abaixo.
