@@ -1,0 +1,16 @@
+[Unit]
+Description=Painel web de hospedagem (VM-Hospedagem)
+After=network.target
+
+[Service]
+User=painel
+Group=painel
+WorkingDirectory=/opt/painel
+EnvironmentFile=/etc/painel/painel.env
+ExecStart=/usr/bin/gunicorn --workers 1 --threads 4 --timeout 300 --bind 127.0.0.1:8001 app:app
+Restart=on-failure
+PrivateTmp=yes
+# Não use NoNewPrivileges=yes: ele impede o sudo de funcionar.
+
+[Install]
+WantedBy=multi-user.target

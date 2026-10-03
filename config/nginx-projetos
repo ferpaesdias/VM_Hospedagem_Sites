@@ -1,0 +1,53 @@
+# /etc/nginx/sites-available/projetos
+#
+# Sites dos alunos: http://[IP]/<turma>/<aluno>/
+# Arquivos estáticos (HTML, CSS, JS) e PHP, com cada aluno isolado na própria pasta.
+
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+
+    # O "_" responde por IP (qualquer host)
+    server_name _;
+
+    root /projetos;
+    index index.php index.html index.htm;
+
+    # Tamanho máximo de envio por formulário (igual ao upload_max_filesize do PHP)
+    client_max_body_size 20M;
+
+    # Bloqueia arquivos ocultos (.git, .env, .htpasswd, .user.ini etc.).
+    # Precisa vir antes dos blocos PHP, senão um arquivo como .teste.php seria executado.
+    location ~ /\. {
+        deny all;
+    }
+
+    # Arquivos estáticos, sem listar o conteúdo das pastas
+    location / {
+        autoindex off;
+        try_files $uri $uri/ =404;
+    }
+
+    # Arquivos gravados na pasta uploads/ nunca são executados como PHP.
+    # Precisa vir antes do bloco do PHP dos alunos: o Nginx testa as regex em ordem.
+    location ~ ^/[A-Za-z0-9]+/[A-Za-z0-9]+/uploads/.*\.php$ {
+        return 403;
+    }
+
+    # PHP de cada aluno: $1 = turma, $2 = aluno
+    #   open_basedir:        o PHP só enxerga a pasta do próprio aluno
+    #                        (/tmp é necessário para o upload de arquivos por formulário)
+    #   session.cookie_path: o cookie de sessão vale só para o site do aluno
+    # A quebra de linha dentro das aspas separa as duas diretivas.
+    location ~ ^/([A-Za-z0-9]+)/([A-Za-z0-9]+)/.*\.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_param PHP_ADMIN_VALUE "open_basedir=/projetos/$1/$2/:/tmp/:/var/lib/php/sessions/
+session.cookie_path=/$1/$2/";
+        fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+    }
+
+    # PHP fora de /turma/aluno/ não executa
+    location ~ \.php$ {
+        return 403;
+    }
+}

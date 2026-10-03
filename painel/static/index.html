@@ -1,0 +1,1088 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hospedagem de sites</title>
+<script>
+/* Tema: "auto" (segue o sistema), "claro" ou "escuro". Fica salvo neste navegador. */
+(function () {
+  var escolha = "auto";
+  try { escolha = localStorage.getItem("painel-tema") || "auto"; } catch (e) { /* armazenamento indisponível */ }
+  var sistemaEscuro = window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches;
+  var efetivo = escolha === "auto" ? (sistemaEscuro ? "escuro" : "claro") : escolha;
+  document.documentElement.setAttribute("data-tema", efetivo);
+  document.documentElement.setAttribute("data-tema-escolha", escolha);
+})();
+</script>
+<style>
+:root {
+  /* Cores institucionais */
+  --marca: #004A8D;          /* azul */
+  --marca-escura: #003566;
+  --marca-clara: #2269B3;
+  --destaque: #F7941D;       /* laranja */
+  --destaque-claro: #FDB94E;
+  --papel: #F2F5F9; --folha: #FFFFFF; --tinta: #1A2433; --tinta-suave: #5A6577; --linha: #D5DCE6;
+  --perigo: #B42318; --perigo-fundo: #FDECEA; --ok: #1E7A45; --ok-fundo: #E7F5EC; --aviso-fundo: #FEF3E2;
+  --realce-fundo: #E8F0F9;
+  color-scheme: light;
+  --cabecalho: var(--marca); --titulo-secao: var(--marca);
+  --ui: Arial, "Helvetica Neue", Helvetica, "Liberation Sans", sans-serif;
+  --mono: ui-monospace, "Cascadia Code", Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+}
+/* Tema escuro: ativado pelo seletor do cabeçalho (ou pelo sistema, no modo automático) */
+:root[data-tema="escuro"] {
+  color-scheme: dark;
+  --papel: #0E1621; --folha: #162131; --tinta: #E4EAF2; --tinta-suave: #9AA7B8; --linha: #2A3A50;
+  --perigo: #F07167; --perigo-fundo: #3A1D1B; --ok: #5CC98A; --ok-fundo: #12301F; --aviso-fundo: #33260F;
+  --realce-fundo: #1B3048;
+  --marca: #0B4F91; --marca-escura: #083D70; --marca-clara: #5A9BE0;
+  --cabecalho: #0A3B6E; --titulo-secao: #E4EAF2;
+}
+* { box-sizing: border-box; }
+html { font-size: 16px; }
+body { transition: background-color .2s, color .2s; margin: 0; background: var(--papel); color: var(--tinta); font-family: var(--ui); line-height: 1.5; }
+[hidden] { display: none !important; }
+code, .mono { font-family: var(--mono); font-size: .88em; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--destaque); outline-offset: 2px; }
+
+.quadro { background: var(--cabecalho); color: #fff; padding: 1.3rem clamp(1rem, 4vw, 2.5rem) 1.5rem; border-bottom: 5px solid var(--destaque); }
+.quadro-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap; max-width: 76rem; margin: 0 auto; }
+.quadro h1 { margin: 0; font-size: 1.6rem; letter-spacing: -.01em; }
+.quem { flex-wrap: wrap; color: #C9DAEE; font-size: .95rem; display: flex; align-items: center; gap: .6rem; }
+.quem strong { color: #fff; }
+.btn-sair { background: transparent; border: 1px solid rgba(255,255,255,.55); color: #fff; padding: .3rem .8rem; font-size: .9rem; }
+.topo-direita { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; justify-content: flex-end; }
+.tema { display: inline-flex; border: 1px solid rgba(255,255,255,.45); border-radius: 4px; overflow: hidden; }
+.tema button { background: transparent; color: #DCE7F5; border: none; border-radius: 0; padding: .3rem .65rem; font-size: .85rem; font-weight: 400; }
+.tema button + button { border-left: 1px solid rgba(255,255,255,.3); }
+.tema button:hover { background: rgba(255,255,255,.12); }
+.tema button[aria-pressed="true"] { background: #fff; color: var(--marca); font-weight: 700; }
+:root[data-tema="escuro"] .tema button[aria-pressed="true"] { background: var(--destaque); color: #1A1300; }
+.btn-sair:hover { background: rgba(255,255,255,.12); border-color: #fff; }
+.caminho { max-width: 76rem; margin: .9rem auto 0; font-family: var(--mono); font-size: clamp(1rem, 2.6vw, 1.35rem); color: #C9DAEE; overflow-wrap: anywhere; }
+.caminho .seg-turma { color: #fff; }
+.caminho .seg-aluno { color: var(--destaque-claro); font-weight: 600; }
+.caminho .seg-pasta { color: #fff; }
+.caminho .vazio { opacity: .45; }
+
+main { max-width: 76rem; margin: 0 auto; padding: 1.75rem clamp(1rem, 4vw, 2.5rem) 3rem; display: grid; gap: 2rem; align-items: start; }
+.duas-colunas { grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); }
+.aluno-colunas { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); }
+@media (max-width: 900px) { .duas-colunas, .aluno-colunas { grid-template-columns: 1fr; } }
+.tela-login { max-width: 26rem; }
+
+section { background: var(--folha); border: 1px solid var(--linha); border-radius: 6px; padding: 1.4rem 1.5rem; }
+section + section { margin-top: 1.5rem; }
+h2 { font-size: 1.2rem; margin: 0 0 .3rem; color: var(--titulo-secao); padding-left: .7rem; border-left: 4px solid var(--destaque); line-height: 1.25; }
+.dica { color: var(--tinta-suave); margin: 0 0 1.1rem; font-size: .95rem; max-width: 60ch; }
+
+label { display: block; font-weight: 700; font-size: .95rem; margin-bottom: .3rem; }
+input[type=text]:focus, input[type=search]:focus, input[type=password]:focus { border-color: var(--marca-clara); }
+input[type=text], input[type=search], input[type=password] {
+  width: 100%; font: inherit; font-size: .95rem; padding: .55rem .7rem;
+  border: 1px solid var(--linha); border-radius: 4px; background: var(--papel); color: var(--tinta);
+}
+input.mono { font-family: var(--mono); }
+input[aria-invalid=true] { border-color: var(--perigo); }
+.campo + .campo { margin-top: .9rem; }
+.campos { display: grid; grid-template-columns: 1fr 1.4fr; gap: .9rem; }
+@media (max-width: 480px) { .campos { grid-template-columns: 1fr; } }
+.erro-campo { color: var(--perigo); font-size: .85rem; min-height: 1.25em; margin-top: .2rem; }
+
+button { font: inherit; font-weight: 700; cursor: pointer; border-radius: 4px; padding: .55rem 1rem; border: 1px solid transparent; }
+button:disabled { opacity: .5; cursor: not-allowed; }
+.btn-principal { background: var(--marca); color: #fff; }
+.btn-principal:hover:not(:disabled) { background: var(--marca-escura); }
+:root[data-tema="escuro"] .btn-principal:hover:not(:disabled) { background: #1560AA; }
+.btn-perigo { background: var(--perigo); color: #fff; }
+.btn-secundario.perigo { color: var(--perigo); }
+.btn-secundario.perigo:hover:not(:disabled) { border-color: var(--perigo); }
+.btn-secundario { background: transparent; border-color: var(--linha); color: var(--tinta); }
+.btn-secundario:hover:not(:disabled) { border-color: var(--tinta-suave); }
+.btn-link { background: none; border: none; padding: .2rem .4rem; color: var(--tinta); font-weight: 400; text-decoration: underline; text-underline-offset: 2px; }
+.btn-link.perigo { color: var(--perigo); }
+.acoes { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin-top: 1rem; }
+
+.aviso { padding: .7rem .9rem; border-radius: 4px; margin-top: 1rem; font-size: .95rem; }
+.aviso.ok { background: var(--ok-fundo); color: var(--ok); }
+.aviso.erro { background: var(--perigo-fundo); color: var(--perigo); }
+.aviso.info { background: var(--aviso-fundo); }
+.aviso:empty { display: none; }
+
+.soltar { display: block; border: 2px dashed var(--linha); border-radius: 6px; padding: 1.3rem; text-align: center; cursor: pointer; font-weight: 400; }
+.soltar.sobre, .area-arquivos.sobre { border-color: var(--marca-clara); background: var(--realce-fundo); }
+.soltar strong { text-decoration: underline; }
+.oculto-acessivel { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.exemplo { font-family: var(--mono); font-size: .82rem; color: var(--tinta-suave); margin-top: .5rem; white-space: pre; }
+.modo { display: flex; border: 1px solid var(--linha); border-radius: 4px; overflow: hidden; width: fit-content; }
+.modo label { margin: 0; padding: .45rem .9rem; font-weight: 400; cursor: pointer; }
+.modo input { position: absolute; opacity: 0; }
+.modo label:has(input:checked) { background: var(--marca); color: #fff; font-weight: 700; }
+.modo label:has(input:focus-visible) { outline: 3px solid var(--destaque); outline-offset: -3px; }
+.modo label.rm:has(input:checked) { background: var(--perigo); }
+
+.tabela-rolagem { overflow-x: auto; max-height: 22rem; overflow-y: auto; margin-top: 1rem; border: 1px solid var(--linha); border-radius: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+th { position: sticky; top: 0; background: var(--folha); z-index: 1; }
+td.n { color: var(--tinta-suave); font-family: var(--mono); width: 3rem; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+.st-ok { color: var(--ok); } .st-erro { color: var(--perigo); } .st-neutro { color: var(--tinta-suave); }
+.resumo { font-size: .95rem; margin-top: .8rem; }
+progress { width: 100%; height: .6rem; accent-color: var(--destaque); }
+
+.busca { margin-bottom: 1rem; }
+details.turma { border-top: 1px solid var(--linha); }
+details.turma:last-child { border-bottom: 1px solid var(--linha); }
+details.turma summary { cursor: pointer; padding: .7rem .2rem; display: flex; justify-content: space-between; gap: 1rem; list-style: none; }
+details.turma summary::-webkit-details-marker { display: none; }
+details.turma summary::before { content: "▸"; margin-right: .5rem; color: var(--tinta-suave); transition: transform .15s; display: inline-block; }
+details.turma[open] summary::before { transform: rotate(90deg); }
+.nome-turma { font-family: var(--mono); font-weight: 600; flex: 1; color: var(--marca-clara); }
+.contagem { color: var(--tinta-suave); font-size: .9rem; }
+ul.alunos { list-style: none; margin: 0 0 .7rem; padding: 0 0 0 1.4rem; }
+ul.alunos li { display: flex; align-items: center; gap: .3rem; padding: .3rem 0; flex-wrap: wrap; }
+ul.alunos li a { font-family: var(--mono); font-size: .9rem; flex: 1; min-width: 12rem; text-decoration: none; }
+ul.alunos li a:hover { text-decoration: underline; }
+ul.alunos li a .t { color: var(--tinta-suave); }
+.sem-pasta { font-size: .8rem; color: var(--perigo); }
+.vazio-lista { color: var(--tinta-suave); padding: 1rem 0; }
+
+/* Arquivos do aluno */
+.trilha { display: flex; flex-wrap: wrap; align-items: center; gap: .1rem; font-family: var(--mono); font-size: .92rem; margin-bottom: .8rem; }
+.trilha button { font-family: var(--mono); font-weight: 400; padding: .15rem .3rem; background: none; border: none; color: var(--tinta); text-decoration: underline; text-underline-offset: 2px; }
+.trilha .atual { font-weight: 600; padding: .15rem .3rem; }
+.trilha .sep { color: var(--tinta-suave); }
+.area-arquivos { border: 2px dashed transparent; border-radius: 6px; transition: background .15s; }
+.area-arquivos .tabela-rolagem { max-height: 28rem; margin-top: 0; }
+td.nome { font-family: var(--mono); overflow-wrap: anywhere; min-width: 9rem; }
+@media (max-width: 600px) { .col-data { display: none; } }
+td.nome button { font-family: var(--mono); font-weight: 600; background: none; border: none; padding: 0; color: var(--tinta); text-decoration: underline; text-underline-offset: 2px; text-align: left; }
+td.nome a { text-decoration: none; } td.nome a:hover { text-decoration: underline; }
+.icone { display: inline-block; width: 1.3rem; color: var(--tinta-suave); }
+.notificacoes-topo { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-top: 1rem; padding-bottom: .3rem; border-bottom: 1px solid var(--linha); }
+.notificacoes-topo span { font-size: .85rem; font-weight: 700; color: var(--tinta-suave); text-transform: uppercase; letter-spacing: .04em; }
+.notificacoes-topo .btn-link { font-size: .9rem; color: var(--marca-clara); }
+.fila { list-style: none; margin: .3rem 0 0; padding: 0; font-size: .9rem; max-height: 14rem; overflow-y: auto; }
+.fila li { display: grid; grid-template-columns: minmax(0, 1fr) 7rem; gap: .2rem .8rem; padding: .35rem 0; border-bottom: 1px solid var(--linha); }
+.fila .arq { font-family: var(--mono); overflow-wrap: anywhere; }
+.fila .st { grid-column: 1 / -1; font-size: .85rem; }
+.fila progress { align-self: center; }
+.endereco { font-family: var(--mono); font-size: .95rem; overflow-wrap: anywhere; }
+dl.dados-ftp { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1rem; margin: 0 0 1rem; font-size: .95rem; }
+dl.dados-ftp dt { font-weight: 700; }
+dl.dados-ftp dd { margin: 0; font-family: var(--mono); font-size: .9rem; overflow-wrap: anywhere; }
+dl.dados-ftp dd .nota { font-family: var(--ui); color: var(--tinta-suave); font-size: .85rem; }
+details.passos { border-top: 1px solid var(--linha); padding-top: .6rem; margin-top: .6rem; }
+details.passos summary { cursor: pointer; font-weight: 700; color: var(--marca-clara); }
+details.passos ol, .texto-info ul { margin: .6rem 0 0; padding-left: 1.3rem; font-size: .93rem; }
+details.passos li, .texto-info li { margin-bottom: .4rem; }
+.texto-info p { margin: 0 0 .7rem; font-size: .95rem; }
+.etiqueta { display: inline-block; font-family: var(--ui); font-size: .72rem; font-weight: 700; letter-spacing: .02em; padding: .08rem .45rem; border-radius: 3px; background: var(--aviso-fundo); color: var(--tinta); margin-left: .5rem; vertical-align: middle; white-space: nowrap; }
+
+dialog { border: none; border-radius: 6px; padding: 1.5rem; max-width: 30rem; width: calc(100% - 2rem); background: var(--folha); color: var(--tinta); }
+dialog::backdrop { background: rgba(0, 25, 50, .55); }
+dialog { border-top: 5px solid var(--destaque); }
+dialog h3 { margin: 0 0 .6rem; font-size: 1.15rem; }
+dialog p { margin: 0 0 .8rem; }
+
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="quadro">
+  <div class="quadro-topo">
+    <h1 id="titulo">Hospedagem de sites</h1>
+    <div class="topo-direita">
+      <div class="tema" role="group" aria-label="Tema da página">
+        <button type="button" data-tema="auto" title="Acompanha o tema do sistema">Automático</button>
+        <button type="button" data-tema="claro">Claro</button>
+        <button type="button" data-tema="escuro">Escuro</button>
+      </div>
+      <div class="quem" id="quem" hidden>
+        <span id="quem-texto"></span>
+        <button type="button" class="btn-sair" id="btn-abrir-senha" hidden>Alterar senha</button>
+        <button type="button" class="btn-sair" id="btn-sair">Sair</button>
+      </div>
+    </div>
+  </div>
+  <div class="caminho" id="caminho"></div>
+</header>
+
+<!-- ============================ LOGIN ============================ -->
+<main id="tela-login" class="tela-login" hidden>
+  <section aria-labelledby="t-login">
+    <h2 id="t-login">Entrar</h2>
+    <p class="dica">Alunos usam o mesmo login e senha do FTP.</p>
+    <form id="form-login" novalidate>
+      <div class="campo">
+        <label for="login-usuario">Login</label>
+        <input type="text" id="login-usuario" class="mono" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+      </div>
+      <div class="campo">
+        <label for="login-senha">Senha</label>
+        <input type="password" id="login-senha" autocomplete="current-password" required>
+      </div>
+      <div class="acoes"><button type="submit" class="btn-principal" id="btn-entrar">Entrar</button></div>
+      <div class="aviso" id="msg-login" role="alert"></div>
+    </form>
+  </section>
+</main>
+
+<!-- ======================= PRIMEIRO ACESSO ======================= -->
+<main id="tela-primeiro" class="tela-login" hidden>
+  <section aria-labelledby="t-primeiro">
+    <h2 id="t-primeiro">Crie a sua senha</h2>
+    <p class="dica">Este é o seu primeiro acesso. Antes de continuar, troque a senha inicial por uma senha só sua. Ela vale para o painel e para o FTP.</p>
+    <form id="form-primeiro" novalidate>
+      <div class="campo">
+        <label for="primeiro-nova">Nova senha</label>
+        <input type="password" id="primeiro-nova" autocomplete="new-password" minlength="8">
+      </div>
+      <div class="campo">
+        <label for="primeiro-conf">Repita a nova senha</label>
+        <input type="password" id="primeiro-conf" autocomplete="new-password">
+      </div>
+      <p class="dica" style="margin:.8rem 0 0">Use pelo menos 8 caracteres, sem o seu login.</p>
+      <div class="acoes"><button type="submit" class="btn-principal" id="btn-primeiro">Salvar e continuar</button></div>
+      <div class="aviso" id="msg-primeiro" role="alert"></div>
+    </form>
+  </section>
+</main>
+
+<!-- ============================ DOCENTE ============================ -->
+<main id="tela-docente" class="duas-colunas" hidden>
+  <div>
+    <section aria-labelledby="t-individual">
+      <h2 id="t-individual">Criar uma conta</h2>
+      <p class="dica">O login vem do e-mail educacional sem o domínio e sem o ponto: <code>fulano.dsilva@…</code> vira <code>fulanodsilva</code>. Cada conta nova recebe a senha inicial <code class="senha-inicial">123@mudar</code>, que o aluno é obrigado a trocar no primeiro acesso.</p>
+      <form id="form-individual" novalidate>
+        <div class="campos">
+          <div>
+            <label for="turma">Turma</label>
+            <input type="text" id="turma" class="mono" list="lista-turmas" autocomplete="off" spellcheck="false" placeholder="turma01">
+            <datalist id="lista-turmas"></datalist>
+            <div class="erro-campo" id="erro-turma"></div>
+          </div>
+          <div>
+            <label for="aluno">Login do aluno</label>
+            <input type="text" id="aluno" class="mono" autocomplete="off" spellcheck="false" placeholder="fulanodsilva">
+            <div class="erro-campo" id="erro-aluno"></div>
+          </div>
+        </div>
+        <div class="acoes"><button type="submit" class="btn-principal" id="btn-criar">Criar conta</button></div>
+        <div class="aviso" id="msg-individual" role="status"></div>
+      </form>
+    </section>
+
+    <section aria-labelledby="t-lote">
+      <h2 id="t-lote">Criar ou remover em lote</h2>
+      <p class="dica">Um aluno por linha, no formato <code>turma,login</code>. Aceita vírgula ou ponto e vírgula e ignora a linha de cabeçalho.</p>
+      <label class="soltar" id="soltar-csv">
+        <input type="file" id="arquivo-csv" class="oculto-acessivel" accept=".csv,text/csv,text/plain">
+        Arraste o arquivo .csv aqui ou <strong>escolha no computador</strong>
+        <div class="exemplo">turma01,fulanodsilva
+turma01,cicranodsantos</div>
+      </label>
+      <div id="area-lote" hidden>
+        <p class="resumo" id="resumo-lote"></p>
+        <div class="modo" role="radiogroup" aria-label="O que fazer com as contas do arquivo">
+          <label><input type="radio" name="acao" value="add" checked> Criar contas</label>
+          <label class="rm"><input type="radio" name="acao" value="rm"> Remover contas</label>
+        </div>
+        <div class="tabela-rolagem">
+          <table>
+            <thead><tr><th>Linha</th><th>Turma</th><th>Login</th><th>Situação</th></tr></thead>
+            <tbody id="corpo-lote"></tbody>
+          </table>
+        </div>
+        <progress id="progresso-lote" value="0" max="1" hidden></progress>
+        <div class="acoes">
+          <button type="button" class="btn-principal" id="btn-lote">Criar contas</button>
+          <button type="button" class="btn-secundario" id="btn-limpar">Escolher outro arquivo</button>
+        </div>
+        <div class="aviso" id="msg-lote" role="status"></div>
+      </div>
+    </section>
+  </div>
+
+  <section aria-labelledby="t-turmas">
+    <h2 id="t-turmas">Turmas e alunos</h2>
+    <p class="dica" id="total"></p>
+    <div class="busca">
+      <label for="busca">Buscar</label>
+      <input type="search" id="busca" class="mono" placeholder="turma ou login" spellcheck="false">
+    </div>
+    <div id="lista" aria-live="polite"><p class="vazio-lista">Carregando…</p></div>
+  </section>
+</main>
+
+<!-- ============================ ALUNO ============================ -->
+<main id="tela-aluno" class="aluno-colunas" hidden>
+  <div>
+    <section aria-labelledby="t-arquivos">
+      <h2 id="t-arquivos">Arquivos do site</h2>
+      <p class="dica">Arraste arquivos ou pastas para a lista. Arquivos com o mesmo nome são substituídos.</p>
+      <nav class="trilha" id="trilha" aria-label="Pasta atual"></nav>
+      <div class="acoes" style="margin-top:0; margin-bottom:1rem">
+        <button type="button" class="btn-principal" id="btn-enviar-arq">Enviar arquivos</button>
+        <button type="button" class="btn-secundario" id="btn-enviar-pasta">Enviar pasta</button>
+        <button type="button" class="btn-secundario" id="btn-nova-pasta">Nova pasta</button>
+      <button type="button" class="btn-secundario perigo" id="btn-esvaziar" hidden>Esvaziar pasta</button>
+        <input type="file" id="input-arquivos" class="oculto-acessivel" multiple tabindex="-1">
+        <input type="file" id="input-pasta" class="oculto-acessivel" webkitdirectory multiple tabindex="-1">
+      </div>
+      <div class="aviso info" id="sem-index" hidden>Seu site ainda não tem página inicial. Envie um arquivo <code>index.html</code> para a pasta principal.</div>
+      <div class="area-arquivos" id="area-arquivos">
+        <div class="tabela-rolagem">
+          <table>
+            <thead><tr><th>Nome</th><th class="num">Tamanho</th><th class="num col-data">Modificado</th><th><span class="oculto-acessivel">Ações</span></th></tr></thead>
+            <tbody id="corpo-arquivos"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="notificacoes-topo" id="notificacoes-topo" hidden>
+        <span>Notificações</span>
+        <button type="button" class="btn-link" id="btn-limpar-notificacoes">Limpar notificações</button>
+      </div>
+      <ul class="fila" id="fila" aria-live="polite"></ul>
+      <div class="aviso" id="msg-arquivos" role="status"></div>
+    </section>
+    <section aria-labelledby="t-uploads">
+      <h2 id="t-uploads">A pasta uploads</h2>
+      <div class="texto-info">
+        <p>Por segurança, o servidor web só consegue <strong>ler</strong> os arquivos do seu site. Assim, um programa PHP com defeito ou mal-intencionado não consegue alterar as suas páginas.</p>
+        <p>A pasta <code>uploads</code> é a exceção: é o único lugar onde os seus programas PHP podem <strong>gravar</strong> arquivos. Use-a para:</p>
+        <ul>
+          <li>arquivos enviados por formulários do seu site (fotos, documentos);</li>
+          <li>arquivos que o PHP cria, como logs ou um banco SQLite.</li>
+        </ul>
+        <p>Não guarde nela as páginas do site. Para limpar o que os seus programas gravaram, abra a pasta e use <strong>Esvaziar pasta</strong>, ou apague os itens um a um. A pasta em si não pode ser apagada, porque sem ela os programas deixam de funcionar.</p>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section aria-labelledby="t-endereco">
+      <h2 id="t-endereco">Endereço do site</h2>
+      <p class="endereco"><a id="link-site" target="_blank" rel="noopener"></a></p>
+    </section>
+    <section aria-labelledby="t-ftp">
+      <h2 id="t-ftp">Enviar pelo FTP</h2>
+      <p class="dica">Além desta página, você pode enviar os arquivos com um programa de FTP, como o FileZilla.</p>
+      <dl class="dados-ftp">
+        <dt>Servidor</dt><dd id="ftp-servidor"></dd>
+        <dt>Porta</dt><dd>21</dd>
+        <dt>Usuário</dt><dd id="ftp-usuario"></dd>
+        <dt>Senha</dt><dd><span class="nota">a mesma deste painel</span></dd>
+        <dt>Protocolo</dt><dd><span class="nota">FTP simples, sem criptografia (não é SFTP)</span></dd>
+      </dl>
+      <details class="passos">
+        <summary>Passo a passo no FileZilla</summary>
+        <ol>
+          <li>Abra <strong>Arquivo › Gerenciador de sites</strong> e clique em <strong>Novo site</strong>.</li>
+          <li>Em <strong>Protocolo</strong>, escolha <strong>FTP – Protocolo de Transferência de Arquivos</strong>.</li>
+          <li>Em <strong>Host</strong>, digite <code id="ftp-host-passo"></code>. Deixe a porta em branco ou use 21.</li>
+          <li>Em <strong>Criptografia</strong>, escolha <strong>Usar somente FTP simples (inseguro)</strong>.</li>
+          <li>Em <strong>Tipo de logon</strong>, escolha <strong>Normal</strong> e preencha usuário e senha.</li>
+          <li>Clique em <strong>Conectar</strong>. O painel da direita mostra a pasta principal do seu site: arraste para lá os arquivos do seu computador.</li>
+        </ol>
+        <p class="dica" style="margin-top:.6rem">O FTP deste servidor não usa criptografia: a senha trafega aberta pela rede. Use só na rede da escola e não reaproveite senhas de outros serviços.</p>
+      </details>
+    </section>
+  </div>
+</main>
+
+<!-- ============================ DIÁLOGOS ============================ -->
+<dialog id="dlg-confirmar">
+  <h3 id="conf-titulo"></h3>
+  <p id="conf-texto"></p>
+  <div class="acoes">
+    <button type="button" id="conf-sim"></button>
+    <button type="button" class="btn-secundario" id="conf-nao">Cancelar</button>
+  </div>
+</dialog>
+
+<dialog id="dlg-senha-aluno">
+  <form id="form-senha" novalidate>
+    <h3>Alterar senha</h3>
+    <p class="dica">A nova senha vale também para o FTP. Use pelo menos 8 caracteres, sem o seu login.</p>
+    <div class="campo">
+      <label for="senha-atual">Senha atual</label>
+      <input type="password" id="senha-atual" autocomplete="current-password">
+    </div>
+    <div class="campo">
+      <label for="senha-nova">Nova senha</label>
+      <input type="password" id="senha-nova" autocomplete="new-password" minlength="8">
+    </div>
+    <div class="campo">
+      <label for="senha-conf">Repita a nova senha</label>
+      <input type="password" id="senha-conf" autocomplete="new-password">
+    </div>
+    <div class="aviso" id="msg-senha" role="alert"></div>
+    <div class="acoes">
+      <button type="submit" class="btn-principal" id="btn-senha">Alterar senha</button>
+      <button type="button" class="btn-secundario" id="senha-cancelar">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-pasta">
+  <form id="form-pasta" method="dialog" novalidate>
+    <h3>Nova pasta</h3>
+    <label for="nome-pasta">Nome da pasta</label>
+    <input type="text" id="nome-pasta" class="mono" autocomplete="off" spellcheck="false">
+    <div class="erro-campo" id="erro-pasta"></div>
+    <div class="acoes">
+      <button type="submit" class="btn-principal">Criar pasta</button>
+      <button type="button" class="btn-secundario" id="pasta-cancelar">Cancelar</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+"use strict";
+const RE_TURMA = /^[a-zA-Z0-9]{1,32}$/;
+const RE_ALUNO = /^[a-z][a-z0-9]{0,31}$/;
+const BLOCO = 20;
+const MAX_ARQUIVO = 20 * 1024 * 1024;
+const HOST_SITE = location.hostname.includes(":") && !location.hostname.startsWith("[") ? `[${location.hostname}]` : location.hostname;
+const $ = (id) => document.getElementById(id);
+let sessaoAtual = null;
+
+/* ======================= utilitários ======================= */
+function el(tag, props = {}, ...filhos) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === "class") e.className = v; else if (k === "text") e.textContent = v; else e.setAttribute(k, v);
+  }
+  filhos.forEach((f) => e.append(f));
+  return e;
+}
+function aviso(id, tipo, texto) { const a = $(id); a.className = "aviso " + tipo; a.textContent = texto; }
+function urlSite(turma, aluno, rel = "") {
+  return `http://${HOST_SITE}/${turma}/${aluno}/${rel.split("/").map(encodeURIComponent).join("/")}`;
+}
+function tamanhoLegivel(b) {
+  if (b < 1024) return `${b} B`;
+  if (b < 1024 * 1024) return `${(b / 1024).toFixed(1).replace(".", ",")} KB`;
+  return `${(b / 1024 / 1024).toFixed(1).replace(".", ",")} MB`;
+}
+function dataLegivel(s) {
+  return new Date(s * 1000).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+}
+function validarAluno(v) {
+  if (!v) return "Informe o login.";
+  if (!/^[a-z]/.test(v)) return "O login deve começar por uma letra.";
+  return RE_ALUNO.test(v) ? "" : "Use letras minúsculas e números, sem ponto nem espaço.";
+}
+function validarTurma(v) { return RE_TURMA.test(v) ? "" : "Use só letras e números, sem espaços."; }
+
+async function api(metodo, url, corpo) {
+  const opcoes = { method: metodo, headers: { "X-Painel": "1" }, credentials: "same-origin" };
+  if (corpo !== undefined) { opcoes.headers["Content-Type"] = "application/json"; opcoes.body = JSON.stringify(corpo); }
+  let r;
+  try { r = await fetch(url, opcoes); } catch { throw new Error("Sem conexão com o servidor."); }
+  let dados = {};
+  try { dados = await r.json(); } catch { /* sem JSON */ }
+  if (r.status === 401 && url !== "api/login") { mostrarLogin(dados.mensagem || "Sua sessão expirou. Entre de novo."); throw new Error("Sessão expirada."); }
+  if (r.status === 403) throw new Error("Acesso negado pelo servidor. Recarregue a página.");
+  if (r.status >= 500) throw new Error(dados.mensagem || "O servidor do painel falhou.");
+  return { ok: r.ok, status: r.status, dados };
+}
+
+/* ======================= diálogos ======================= */
+function confirmar(titulo, texto, rotulo, perigo = true) {
+  return new Promise((resolve) => {
+    const d = $("dlg-confirmar");
+    $("conf-titulo").textContent = titulo;
+    $("conf-texto").textContent = texto;
+    $("conf-sim").textContent = rotulo;
+    $("conf-sim").className = perigo ? "btn-perigo" : "btn-principal";
+    let valor = false;
+    $("conf-sim").onclick = () => { valor = true; d.close(); };
+    $("conf-nao").onclick = () => d.close();
+    d.onclose = () => resolve(valor);
+    d.showModal();
+    $("conf-nao").focus();
+  });
+}
+
+/* ======================= sessão e telas ======================= */
+function trocarTela(nome) {
+  ["tela-login", "tela-primeiro", "tela-docente", "tela-aluno"].forEach((t) => ($(t).hidden = t !== "tela-" + nome));
+}
+
+function mostrarLogin(mensagem) {
+  sessaoAtual = null;
+  document.querySelectorAll("dialog[open]").forEach((d) => d.close());
+  $("titulo").textContent = "Hospedagem de sites";
+  $("quem").hidden = true;
+  $("btn-abrir-senha").hidden = true;
+  $("caminho").textContent = HOST_SITE;
+  trocarTela("login");
+  $("login-senha").value = "";
+  aviso("msg-login", mensagem ? "info" : "", mensagem || "");
+  $("login-usuario").focus();
+}
+
+function entrar(s) {
+  sessaoAtual = s;
+  $("quem").hidden = false;
+  $("quem-texto").textContent = "";
+  if (s.papel === "docente") {
+    $("titulo").textContent = "Contas de alunos";
+    $("quem-texto").append("Docente: ", el("strong", { text: s.login }));
+    trocarTela("docente");
+    document.querySelectorAll(".senha-inicial").forEach((c) => (c.textContent = s.senha_inicial));
+    atualizarCaminhoDocente();
+    carregarAlunos();
+  } else {
+    $("quem-texto").append("Aluno: ", el("strong", { text: s.login }), `, ${s.turma}`);
+    $("caminho").textContent = "";
+    $("caminho").append(HOST_SITE + "/", el("span", { class: "seg-turma", text: s.turma }), "/", el("span", { class: "seg-aluno", text: s.login }), "/");
+    if (s.trocar_senha) {
+      $("titulo").textContent = "Primeiro acesso";
+      trocarTela("primeiro");
+      $("primeiro-nova").focus();
+      return;
+    }
+    $("titulo").textContent = "Meu site";
+    $("btn-abrir-senha").hidden = false;
+    trocarTela("aluno");
+    const url = urlSite(s.turma, s.login);
+    $("link-site").href = url; $("link-site").textContent = url;
+    $("ftp-servidor").textContent = HOST_SITE; $("ftp-host-passo").textContent = HOST_SITE;
+    $("ftp-usuario").textContent = s.login;
+    abrirPasta("");
+  }
+}
+
+$("form-login").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const login = $("login-usuario").value.trim().toLowerCase(), senha = $("login-senha").value;
+  if (!login || !senha) { aviso("msg-login", "erro", "Preencha o login e a senha."); return; }
+  $("btn-entrar").disabled = true;
+  try {
+    const { ok, dados } = await api("POST", "api/login", { login, senha });
+    if (ok) { aviso("msg-login", "", ""); entrar(dados); }
+    else { aviso("msg-login", "erro", dados.mensagem || "Não foi possível entrar."); $("login-senha").select(); }
+  } catch (err) { aviso("msg-login", "erro", err.message); }
+  $("btn-entrar").disabled = false;
+});
+
+$("btn-sair").addEventListener("click", async () => {
+  try { await api("POST", "api/logout"); } catch { /* sai mesmo assim */ }
+  location.reload();
+});
+
+/* ======================= DOCENTE ======================= */
+let turmasAtuais = [];
+let linhasLote = [];
+
+function atualizarCaminhoDocente() {
+  const t = $("turma").value.trim(), a = $("aluno").value.trim();
+  const c = $("caminho"); c.textContent = "";
+  c.append(HOST_SITE + "/");
+  c.append(el("span", { class: t ? "seg-turma" : "seg-turma vazio", text: t || "turma" }), "/");
+  c.append(el("span", { class: a ? "seg-aluno" : "seg-aluno vazio", text: a || "aluno" }), "/");
+}
+
+async function carregarAlunos() {
+  try {
+    const { ok, dados } = await api("GET", "api/alunos");
+    if (!ok) throw new Error(dados.mensagem || "Não foi possível carregar a lista de alunos.");
+    turmasAtuais = dados.turmas;
+    const dl = $("lista-turmas"); dl.textContent = "";
+    turmasAtuais.forEach((t) => dl.append(el("option", { value: t.turma })));
+    desenharLista();
+  } catch (e) {
+    if (e.message === "Sessão expirada.") return;
+    $("lista").textContent = "";
+    $("lista").append(el("p", { class: "aviso erro", text: e.message }));
+  }
+}
+
+function desenharLista() {
+  const filtro = $("busca").value.trim().toLowerCase();
+  const lista = $("lista"); lista.textContent = "";
+  const abertas = new Set([...document.querySelectorAll("details.turma[open]")].map((d) => d.dataset.turma));
+  let total = 0, mostrados = 0;
+  turmasAtuais.forEach((t) => {
+    total += t.alunos.length;
+    const casaTurma = t.turma.toLowerCase().includes(filtro);
+    const alunos = t.alunos.filter((a) => !filtro || casaTurma || a.aluno.includes(filtro));
+    if (!alunos.length) return;
+    mostrados += alunos.length;
+    const ul = el("ul", { class: "alunos" });
+    alunos.forEach((a) => {
+      const link = el("a", { href: urlSite(t.turma, a.aluno), target: "_blank", rel: "noopener" },
+        el("span", { class: "t", text: `/${t.turma}/` }), `${a.aluno}/`);
+      const li = el("li", {}, link);
+      if (!a.pasta_ok) li.append(el("span", { class: "sem-pasta", text: "pasta não encontrada" }));
+      const bSenha = el("button", { type: "button", class: "btn-link", text: "Redefinir senha", "aria-label": `Redefinir senha de ${a.aluno}` });
+      bSenha.addEventListener("click", () => redefinirSenha(t.turma, a.aluno));
+      const bRm = el("button", { type: "button", class: "btn-link perigo", text: "Remover", "aria-label": `Remover ${a.aluno}` });
+      bRm.addEventListener("click", () => removerUm(t.turma, a.aluno));
+      li.append(bSenha, bRm);
+      ul.append(li);
+    });
+    const plural = t.alunos.length === 1 ? "aluno" : "alunos";
+    const det = el("details", { class: "turma" },
+      el("summary", {}, el("span", { class: "nome-turma", text: t.turma }), el("span", { class: "contagem", text: `${t.alunos.length} ${plural}` })),
+      ul);
+    det.dataset.turma = t.turma;
+    if (filtro || abertas.has(t.turma)) det.open = true;
+    lista.append(det);
+  });
+  $("total").textContent = `${turmasAtuais.length} turma(s), ${total} aluno(s) com conta.`;
+  if (!mostrados) {
+    lista.append(el("p", { class: "vazio-lista",
+      text: filtro ? `Nenhum aluno encontrado para “${filtro}”.` : "Nenhuma conta de aluno ainda. Crie a primeira ao lado ou importe um CSV." }));
+  }
+}
+
+async function removerUm(turma, aluno) {
+  if (!await confirmar(`Remover ${aluno}?`, `A conta e o site /${turma}/${aluno}/ serão apagados e não podem ser recuperados.`, "Remover conta")) return;
+  try {
+    const { dados } = await api("DELETE", `api/alunos/${encodeURIComponent(turma)}/${encodeURIComponent(aluno)}`);
+    aviso("msg-individual", dados.status === "removido" ? "ok" : dados.status === "ignorado" ? "info" : "erro", `${aluno}: ${dados.mensagem}`);
+  } catch (e) { aviso("msg-individual", "erro", e.message); }
+  carregarAlunos();
+}
+
+async function redefinirSenha(turma, aluno) {
+  if (!await confirmar(`Redefinir a senha de ${aluno}?`,
+    `A senha volta a ser ${sessaoAtual.senha_inicial} e o aluno terá de criar uma nova no próximo acesso.`, "Redefinir senha", false)) return;
+  try {
+    const { ok, dados } = await api("POST", `api/alunos/${encodeURIComponent(turma)}/${encodeURIComponent(aluno)}/senha`);
+    aviso("msg-individual", ok ? "ok" : "erro", dados.mensagem || "Não foi possível redefinir a senha.");
+  } catch (e) { if (e.message !== "Sessão expirada.") aviso("msg-individual", "erro", e.message); }
+}
+
+$("aluno").addEventListener("input", (e) => { e.target.value = e.target.value.toLowerCase().replace(/\s/g, ""); atualizarCaminhoDocente(); });
+$("turma").addEventListener("input", (e) => { e.target.value = e.target.value.replace(/\s/g, ""); atualizarCaminhoDocente(); });
+
+$("form-individual").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const turma = $("turma").value.trim(), aluno = $("aluno").value.trim();
+  const et = validarTurma(turma), ea = validarAluno(aluno);
+  $("erro-turma").textContent = et; $("turma").setAttribute("aria-invalid", !!et);
+  $("erro-aluno").textContent = ea; $("aluno").setAttribute("aria-invalid", !!ea);
+  if (et || ea) return;
+  $("btn-criar").disabled = true;
+  try {
+    const { dados } = await api("POST", "api/alunos", { turma, aluno });
+    const tipo = dados.status === "criado" ? "ok" : dados.status === "ignorado" ? "info" : "erro";
+    aviso("msg-individual", tipo, `${aluno}: ${dados.mensagem || "Resposta inesperada do servidor."}`);
+    if (dados.status === "criado") {
+      $("aluno").value = ""; atualizarCaminhoDocente(); $("aluno").focus();
+    }
+  } catch (err) { if (err.message !== "Sessão expirada.") aviso("msg-individual", "erro", err.message); }
+  $("btn-criar").disabled = false;
+  carregarAlunos();
+});
+
+function lerCSV(texto) {
+  const linhas = [], vistos = new Set();
+  let primeira = true;
+  texto.replace(/^\uFEFF/, "").split(/\r?\n/).forEach((bruta, i) => {
+    const conteudo = bruta.trim();
+    if (!conteudo || conteudo.startsWith("#")) return;
+    const partes = conteudo.split(/[;,]/).map((p) => p.trim().replace(/^"(.*)"$/, "$1"));
+    if (primeira) {
+      primeira = false;
+      if (/^turma$/i.test(partes[0]) && /aluno|login|nome|usu/i.test(partes[1] || "")) return;
+    }
+    const turma = partes[0] || "", aluno = (partes[1] || "").toLowerCase();
+    let erro = partes.length !== 2 ? "Esperado turma,login" : (RE_TURMA.test(turma) ? "" : "Turma inválida") || validarAluno(aluno);
+    if (!erro && vistos.has(aluno)) erro = "Login repetido no arquivo";
+    vistos.add(aluno);
+    linhas.push({ n: i + 1, turma, aluno, status: erro ? "invalida" : "pronta", mensagem: erro || "Pronta" });
+  });
+  return linhas;
+}
+
+function acaoLote() { return document.querySelector("input[name=acao]:checked").value; }
+
+function desenharLote() {
+  const corpo = $("corpo-lote"); corpo.textContent = "";
+  linhasLote.forEach((l) => {
+    const cls = { criado: "st-ok", removido: "st-ok", invalida: "st-erro", erro: "st-erro" }[l.status] || "st-neutro";
+    corpo.append(el("tr", {},
+      el("td", { class: "n", text: l.n }), el("td", { class: "mono", text: l.turma }), el("td", { class: "mono", text: l.aluno }),
+      el("td", { class: cls, text: l.mensagem })));
+  });
+  const validas = linhasLote.filter((l) => l.status === "pronta").length;
+  const invalidas = linhasLote.filter((l) => l.status === "invalida").length;
+  $("resumo-lote").textContent = `${linhasLote.length} linha(s) lida(s): ${validas} pronta(s)` + (invalidas ? `, ${invalidas} com problema (serão ignoradas).` : ".");
+  const rm = acaoLote() === "rm";
+  $("btn-lote").textContent = rm ? `Remover ${validas} conta(s)` : `Criar ${validas} conta(s)`;
+  $("btn-lote").className = rm ? "btn-perigo" : "btn-principal";
+  $("btn-lote").disabled = validas === 0;
+}
+
+async function abrirCSV(arquivo) {
+  if (!arquivo) return;
+  if (arquivo.size > 512 * 1024) { aviso("msg-lote", "erro", "Arquivo grande demais (máximo 512 KB)."); return; }
+  linhasLote = lerCSV(await arquivo.text());
+  $("area-lote").hidden = false; $("progresso-lote").hidden = true; aviso("msg-lote", "", "");
+  if (!linhasLote.length) aviso("msg-lote", "erro", "O arquivo não tem nenhuma linha no formato turma,login.");
+  desenharLote();
+}
+
+$("arquivo-csv").addEventListener("change", (e) => abrirCSV(e.target.files[0]));
+const zonaCSV = $("soltar-csv");
+["dragenter", "dragover"].forEach((ev) => zonaCSV.addEventListener(ev, (e) => { e.preventDefault(); zonaCSV.classList.add("sobre"); }));
+["dragleave", "drop"].forEach((ev) => zonaCSV.addEventListener(ev, (e) => { e.preventDefault(); zonaCSV.classList.remove("sobre"); }));
+zonaCSV.addEventListener("drop", (e) => abrirCSV(e.dataTransfer.files[0]));
+document.querySelectorAll("input[name=acao]").forEach((r) => r.addEventListener("change", desenharLote));
+$("btn-limpar").addEventListener("click", () => { linhasLote = []; $("area-lote").hidden = true; $("arquivo-csv").value = ""; $("arquivo-csv").click(); });
+
+$("btn-lote").addEventListener("click", async () => {
+  const acao = acaoLote();
+  const pendentes = linhasLote.filter((l) => l.status === "pronta");
+  if (!pendentes.length) return;
+  if (acao === "rm" && !await confirmar(`Remover ${pendentes.length} conta(s)?`,
+    "Todas as contas prontas da tabela e seus sites serão apagados e não podem ser recuperados.", `Remover ${pendentes.length} conta(s)`)) return;
+  const travar = (v) => { $("btn-lote").disabled = $("btn-limpar").disabled = v; document.querySelectorAll("input[name=acao]").forEach((r) => (r.disabled = v)); };
+  travar(true);
+  const prog = $("progresso-lote"); prog.hidden = false; prog.max = pendentes.length; prog.value = 0;
+  aviso("msg-lote", "info", "Processando… não feche esta página.");
+  let falha = "";
+  for (let i = 0; i < pendentes.length; i += BLOCO) {
+    const bloco = pendentes.slice(i, i + BLOCO);
+    try {
+      const { ok, dados } = await api("POST", "api/lote", { acao, linhas: bloco.map(({ turma, aluno }) => ({ turma, aluno })) });
+      if (!ok) throw new Error(dados.mensagem || "O servidor recusou o lote.");
+      dados.resultados.forEach((r, j) => Object.assign(bloco[j], { status: r.status, mensagem: r.mensagem }));
+    } catch (e) {
+      falha = e.message;
+      bloco.forEach((l) => Object.assign(l, { status: "erro", mensagem: "Não processada: " + e.message }));
+    }
+    prog.value = Math.min(i + BLOCO, pendentes.length);
+    desenharLote();
+    if (falha) break;
+  }
+  const n = (s) => linhasLote.filter((l) => l.status === s).length;
+  const feitos = n(acao === "add" ? "criado" : "removido");
+  let texto = `${feitos} conta(s) ${acao === "add" ? "criada(s)" : "removida(s)"}, ${n("ignorado")} ignorada(s), ${n("erro")} com erro.`;
+  if (acao === "add" && feitos) texto += ` Senha inicial das contas novas: ${sessaoAtual.senha_inicial}`;
+  if (falha) texto += ` Processamento interrompido: ${falha}`;
+  aviso("msg-lote", n("erro") || falha ? "erro" : "ok", texto);
+  travar(false);
+  $("btn-lote").disabled = true;
+  carregarAlunos();
+});
+
+$("busca").addEventListener("input", desenharLista);
+
+/* ======================= ALUNO ======================= */
+let pastaAtual = "";
+let itensAtuais = [];
+let enviando = false;
+
+function juntar(...partes) { return partes.filter(Boolean).join("/"); }
+
+function atualizarCaminhoAluno() {
+  const s = sessaoAtual, c = $("caminho"); c.textContent = "";
+  c.append(HOST_SITE + "/", el("span", { class: "seg-turma", text: s.turma }), "/", el("span", { class: "seg-aluno", text: s.login }), "/");
+  if (pastaAtual) c.append(el("span", { class: "seg-pasta", text: pastaAtual }), "/");
+
+  const t = $("trilha"); t.textContent = "";
+  const partes = pastaAtual ? pastaAtual.split("/") : [];
+  const botao = (rotulo, destino) => { const b = el("button", { type: "button", text: rotulo }); b.addEventListener("click", () => abrirPasta(destino)); return b; };
+  if (partes.length) t.append(botao("pasta principal", "")); else t.append(el("span", { class: "atual", text: "pasta principal", "aria-current": "page" }));
+  partes.forEach((p, i) => {
+    t.append(el("span", { class: "sep", text: "/" }));
+    if (i === partes.length - 1) t.append(el("span", { class: "atual", text: p, "aria-current": "page" }));
+    else t.append(botao(p, partes.slice(0, i + 1).join("/")));
+  });
+}
+
+async function abrirPasta(caminho) {
+  pastaAtual = caminho;
+  atualizarCaminhoAluno();
+  const corpo = $("corpo-arquivos");
+  corpo.textContent = "";
+  corpo.append(el("tr", {}, el("td", { colspan: "4", class: "st-neutro", text: "Carregando…" })));
+  try {
+    const { ok, dados } = await api("GET", "api/arquivos?caminho=" + encodeURIComponent(caminho));
+    if (!ok) throw new Error(dados.mensagem || "Não foi possível abrir a pasta.");
+    itensAtuais = dados.itens;
+    desenharArquivos();
+  } catch (e) {
+    if (e.message === "Sessão expirada.") return;
+    corpo.textContent = "";
+    corpo.append(el("tr", {}, el("td", { colspan: "4", class: "st-erro", text: e.message })));
+  }
+}
+
+function desenharArquivos() {
+  const corpo = $("corpo-arquivos"); corpo.textContent = "";
+  $("btn-esvaziar").hidden = pastaAtual !== "uploads";
+  $("btn-esvaziar").disabled = itensAtuais.length === 0;
+  $("sem-index").hidden = pastaAtual !== "" || itensAtuais.some((i) => /^index\.(html?|php)$/i.test(i.nome));
+  if (pastaAtual) {
+    const voltar = el("button", { type: "button", text: ".. (voltar)" });
+    voltar.addEventListener("click", () => abrirPasta(pastaAtual.split("/").slice(0, -1).join("/")));
+    corpo.append(el("tr", {}, el("td", { class: "nome", colspan: "4" }, el("span", { class: "icone", text: "↰" }), voltar)));
+  }
+  if (!itensAtuais.length) {
+    corpo.append(el("tr", {}, el("td", { colspan: "4", class: "st-neutro", text: "Pasta vazia. Arraste arquivos para cá ou use Enviar arquivos." })));
+    return;
+  }
+  itensAtuais.forEach((it) => {
+    const rel = juntar(pastaAtual, it.nome);
+    let nome;
+    if (it.tipo === "pasta") {
+      const b = el("button", { type: "button", text: it.nome + "/" });
+      b.addEventListener("click", () => abrirPasta(rel));
+      nome = el("td", { class: "nome" }, el("span", { class: "icone", text: "▸" }), b);
+      if (rel === "uploads") nome.append(el("span", { class: "etiqueta", text: "gravável pelo PHP", title: "Veja “A pasta uploads” ao lado" }));
+    } else {
+      const a = el("a", { href: urlSite(sessaoAtual.turma, sessaoAtual.login, rel), target: "_blank", rel: "noopener", text: it.nome });
+      nome = el("td", { class: "nome" }, el("span", { class: "icone", text: "" }), a);
+    }
+    let apagar = "";
+    if (rel !== "uploads") {
+      apagar = el("button", { type: "button", class: "btn-link perigo", text: "Apagar", "aria-label": `Apagar ${it.nome}` });
+      apagar.addEventListener("click", () => apagarItem(it, rel));
+    }
+    corpo.append(el("tr", {}, nome,
+      el("td", { class: "num st-neutro", text: it.tipo === "pasta" ? "" : tamanhoLegivel(it.tamanho) }),
+      el("td", { class: "num st-neutro col-data", text: dataLegivel(it.modificado) }),
+      el("td", { class: "num" }, apagar)));
+  });
+}
+
+async function apagarItem(it, rel) {
+  const pasta = it.tipo === "pasta";
+  if (!await confirmar(`Apagar ${it.nome}${pasta ? "/" : ""}?`,
+    pasta ? "A pasta e tudo o que está dentro dela serão apagados e não podem ser recuperados." : "O arquivo será apagado e não pode ser recuperado.",
+    pasta ? "Apagar pasta" : "Apagar arquivo")) return;
+  try {
+    const { ok, dados } = await api("DELETE", "api/arquivos?caminho=" + encodeURIComponent(rel));
+    aviso("msg-arquivos", ok ? "ok" : "erro", ok ? `${it.nome} apagado.` : dados.mensagem || "Não foi possível apagar.");
+  } catch (e) { if (e.message !== "Sessão expirada.") aviso("msg-arquivos", "erro", e.message); }
+  abrirPasta(pastaAtual);
+}
+
+/* ---- esvaziar uploads ---- */
+$("btn-esvaziar").addEventListener("click", async () => {
+  const n = itensAtuais.length;
+  if (!await confirmar("Esvaziar a pasta uploads?",
+    `Os ${n} item(ns) desta pasta, inclusive o que os seus programas PHP gravaram, serão apagados e não podem ser recuperados. A pasta continua existindo.`,
+    "Esvaziar pasta")) return;
+  $("btn-esvaziar").disabled = true;
+  try {
+    const { ok, dados } = await api("POST", "api/uploads/esvaziar");
+    if (!ok) aviso("msg-arquivos", "erro", dados.mensagem || "Não foi possível esvaziar a pasta.");
+    else if (dados.falhas && dados.falhas.length) aviso("msg-arquivos", "erro", `${dados.removidos} item(ns) apagado(s). Não foi possível apagar: ${dados.falhas.join(", ")}.`);
+    else aviso("msg-arquivos", "ok", `Pasta uploads esvaziada: ${dados.removidos} item(ns) apagado(s).`);
+  } catch (e) { if (e.message !== "Sessão expirada.") aviso("msg-arquivos", "erro", e.message); }
+  abrirPasta(pastaAtual);
+});
+
+/* ---- nova pasta ---- */
+$("btn-nova-pasta").addEventListener("click", () => {
+  $("nome-pasta").value = ""; $("erro-pasta").textContent = "";
+  $("dlg-pasta").showModal(); $("nome-pasta").focus();
+});
+$("pasta-cancelar").addEventListener("click", () => $("dlg-pasta").close());
+$("form-pasta").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nome = $("nome-pasta").value.trim();
+  if (!nome || nome.includes("/") || nome.startsWith(".")) { $("erro-pasta").textContent = "Use um nome sem barra e que não comece com ponto."; return; }
+  try {
+    const { ok, dados } = await api("POST", "api/pastas", { caminho: juntar(pastaAtual, nome) });
+    if (!ok) { $("erro-pasta").textContent = dados.mensagem || "Não foi possível criar a pasta."; return; }
+    $("dlg-pasta").close();
+    aviso("msg-arquivos", "ok", `Pasta ${nome} criada.`);
+    abrirPasta(pastaAtual);
+  } catch (err) { $("erro-pasta").textContent = err.message; }
+});
+
+/* ---- envio ---- */
+function enviarUm(rel, arquivo, aoProgredir) {
+  return new Promise((resolve) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("PUT", "api/arquivos?caminho=" + encodeURIComponent(rel));
+    xhr.setRequestHeader("X-Painel", "1");
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    xhr.upload.onprogress = (e) => e.lengthComputable && aoProgredir(e.loaded / e.total);
+    xhr.onload = () => {
+      let d = {}; try { d = JSON.parse(xhr.responseText); } catch { /* sem JSON */ }
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, mensagem: d.mensagem });
+    };
+    xhr.onerror = () => resolve({ ok: false, status: 0, mensagem: "Falha de rede." });
+    xhr.send(arquivo);
+  });
+}
+
+async function coletarSoltos(dt) {
+  const entradas = [...dt.items].map((i) => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!entradas.length) return [...dt.files].map((f) => ({ arquivo: f, rel: f.name }));
+  const saida = [];
+  async function andar(entrada, prefixo) {
+    if (entrada.isFile) {
+      const f = await new Promise((res, rej) => entrada.file(res, rej));
+      saida.push({ arquivo: f, rel: prefixo + f.name });
+    } else if (entrada.isDirectory) {
+      const leitor = entrada.createReader();
+      let lote;
+      do {
+        lote = await new Promise((res, rej) => leitor.readEntries(res, rej));
+        for (const e of lote) await andar(e, prefixo + entrada.name + "/");
+      } while (lote.length);
+    }
+  }
+  for (const e of entradas) await andar(e, "");
+  return saida;
+}
+
+async function enviarLista(lista) {
+  if (enviando || !lista.length) return;
+  const ignorados = lista.filter((x) => x.rel.split("/").some((p) => p.startsWith(".")));
+  const validos = lista.filter((x) => !ignorados.includes(x));
+  if (!validos.length) { aviso("msg-arquivos", "info", "Nada para enviar: arquivos e pastas começando com ponto não são publicados."); return; }
+
+  const existentes = new Set(itensAtuais.filter((i) => i.tipo === "arquivo").map((i) => i.nome));
+  const substituir = validos.filter((x) => !x.rel.includes("/") && existentes.has(x.rel)).length;
+  if (substituir && !await confirmar(`Substituir ${substituir} arquivo(s)?`,
+    "Já existem arquivos com esses nomes nesta pasta. As versões antigas serão perdidas.", "Substituir", false)) return;
+
+  enviando = true;
+  $("btn-limpar-notificacoes").disabled = true;
+  aviso("msg-arquivos", "info", "Enviando… não feche esta página.");
+  const fila = $("fila"); fila.textContent = "";
+  const linhas = validos.map((x) => {
+    const prog = el("progress", { max: "1", value: "0" });
+    const st = el("span", { class: "st st-neutro", text: "Aguardando" });
+    const li = el("li", {}, el("span", { class: "arq", text: x.rel }), prog, st);
+    fila.append(li);
+    return { ...x, prog, st };
+  });
+  let ok = 0, erros = 0;
+  for (const l of linhas) {
+    if (l.arquivo.size > MAX_ARQUIVO) {
+      l.st.textContent = "Grande demais (máximo 20 MB)"; l.st.className = "st st-erro"; erros++; continue;
+    }
+    l.st.textContent = "Enviando";
+    l.st.scrollIntoView({ block: "nearest" });
+    const r = await enviarUm(juntar(pastaAtual, l.rel), l.arquivo, (p) => (l.prog.value = p));
+    if (r.status === 401) { mostrarLogin("Sua sessão expirou durante o envio. Entre de novo e envie o restante."); enviando = false; $("btn-limpar-notificacoes").disabled = false; return; }
+    if (r.ok) { l.prog.value = 1; l.st.textContent = "Enviado"; l.st.className = "st st-ok"; ok++; }
+    else { l.st.textContent = r.mensagem || `Erro ${r.status}`; l.st.className = "st st-erro"; erros++; }
+  }
+  enviando = false;
+  $("btn-limpar-notificacoes").disabled = false;
+  let texto = `${ok} arquivo(s) enviado(s)` + (erros ? `, ${erros} com erro.` : ".");
+  if (ignorados.length) texto += ` ${ignorados.length} arquivo(s) começando com ponto foram ignorados.`;
+  aviso("msg-arquivos", erros ? "erro" : "ok", texto);
+  abrirPasta(pastaAtual);
+}
+
+$("btn-enviar-arq").addEventListener("click", () => $("input-arquivos").click());
+$("btn-enviar-pasta").addEventListener("click", () => $("input-pasta").click());
+$("input-arquivos").addEventListener("change", (e) => { enviarLista([...e.target.files].map((f) => ({ arquivo: f, rel: f.name }))); e.target.value = ""; });
+$("input-pasta").addEventListener("change", (e) => { enviarLista([...e.target.files].map((f) => ({ arquivo: f, rel: f.webkitRelativePath || f.name }))); e.target.value = ""; });
+
+const zonaArq = $("area-arquivos");
+["dragenter", "dragover"].forEach((ev) => zonaArq.addEventListener(ev, (e) => { e.preventDefault(); zonaArq.classList.add("sobre"); }));
+zonaArq.addEventListener("dragleave", (e) => { if (!zonaArq.contains(e.relatedTarget)) zonaArq.classList.remove("sobre"); });
+zonaArq.addEventListener("drop", async (e) => {
+  e.preventDefault(); zonaArq.classList.remove("sobre");
+  enviarLista(await coletarSoltos(e.dataTransfer));
+});
+window.addEventListener("beforeunload", (e) => { if (enviando) e.preventDefault(); });
+
+/* ---- notificações: o botão Limpar só aparece quando há algo para limpar ---- */
+function atualizarNotificacoes() {
+  const temAlgo = $("fila").children.length > 0 || $("msg-arquivos").textContent.trim() !== "";
+  $("notificacoes-topo").hidden = !temAlgo;
+}
+const observador = new MutationObserver(atualizarNotificacoes);
+observador.observe($("fila"), { childList: true });
+observador.observe($("msg-arquivos"), { childList: true, characterData: true, subtree: true });
+$("btn-limpar-notificacoes").addEventListener("click", () => {
+  if (enviando) return;
+  $("fila").textContent = "";
+  aviso("msg-arquivos", "", "");
+  $("btn-enviar-arq").focus();
+});
+
+/* ---- senha ---- */
+$("btn-abrir-senha").addEventListener("click", () => {
+  $("form-senha").reset(); aviso("msg-senha", "", "");
+  $("dlg-senha-aluno").showModal(); $("senha-atual").focus();
+});
+$("senha-cancelar").addEventListener("click", () => $("dlg-senha-aluno").close());
+$("form-senha").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const atual = $("senha-atual").value, nova = $("senha-nova").value, conf = $("senha-conf").value;
+  if (!atual || !nova) { aviso("msg-senha", "erro", "Preencha a senha atual e a nova senha."); return; }
+  if (nova.length < 8) { aviso("msg-senha", "erro", "A nova senha precisa ter pelo menos 8 caracteres."); return; }
+  if (nova !== conf) { aviso("msg-senha", "erro", "A nova senha e a repetição estão diferentes."); $("senha-conf").select(); return; }
+  $("btn-senha").disabled = true;
+  try {
+    const { ok, dados } = await api("POST", "api/senha", { atual, nova });
+    if (ok) {
+      $("form-senha").reset(); $("dlg-senha-aluno").close();
+      aviso("msg-arquivos", "ok", "Senha alterada. Use a nova senha no painel e no FTP.");
+    }
+    else aviso("msg-senha", "erro", dados.mensagem || "Não foi possível alterar a senha.");
+  } catch (err) { if (err.message !== "Sessão expirada.") aviso("msg-senha", "erro", err.message); }
+  $("btn-senha").disabled = false;
+});
+
+/* ---- primeiro acesso ---- */
+$("form-primeiro").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const nova = $("primeiro-nova").value, conf = $("primeiro-conf").value;
+  if (nova.length < 8) { aviso("msg-primeiro", "erro", "A nova senha precisa ter pelo menos 8 caracteres."); return; }
+  if (nova !== conf) { aviso("msg-primeiro", "erro", "A nova senha e a repetição estão diferentes."); $("primeiro-conf").select(); return; }
+  $("btn-primeiro").disabled = true;
+  try {
+    const { ok, dados } = await api("POST", "api/senha", { nova });
+    if (ok) {
+      $("form-primeiro").reset(); aviso("msg-primeiro", "", "");
+      sessaoAtual.trocar_senha = false;
+      entrar(sessaoAtual);
+      aviso("msg-arquivos", "ok", "Senha criada. Use a nova senha no painel e no FTP.");
+    } else aviso("msg-primeiro", "erro", dados.mensagem || "Não foi possível salvar a senha.");
+  } catch (err) { if (err.message !== "Sessão expirada.") aviso("msg-primeiro", "erro", err.message); }
+  $("btn-primeiro").disabled = false;
+});
+
+/* ======================= tema ======================= */
+const consultaEscuro = window.matchMedia("(prefers-color-scheme: dark)");
+function aplicarTema(escolha) {
+  const efetivo = escolha === "auto" ? (consultaEscuro.matches ? "escuro" : "claro") : escolha;
+  document.documentElement.dataset.tema = efetivo;
+  document.documentElement.dataset.temaEscolha = escolha;
+  document.querySelectorAll(".tema button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tema === escolha)));
+}
+document.querySelectorAll(".tema button").forEach((b) => b.addEventListener("click", () => {
+  try { localStorage.setItem("painel-tema", b.dataset.tema); } catch { /* armazenamento indisponível */ }
+  aplicarTema(b.dataset.tema);
+}));
+consultaEscuro.addEventListener("change", () => {
+  if (document.documentElement.dataset.temaEscolha === "auto") aplicarTema("auto");
+});
+aplicarTema(document.documentElement.dataset.temaEscolha || "auto");
+
+/* ======================= início ======================= */
+(async () => {
+  try {
+    const r = await fetch("api/sessao", { credentials: "same-origin" });
+    if (r.ok) entrar(await r.json()); else mostrarLogin();
+  } catch { mostrarLogin("Sem conexão com o servidor."); }
+})();
+</script>
+</body>
+</html>

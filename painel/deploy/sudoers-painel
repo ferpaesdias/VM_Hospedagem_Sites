@@ -1,0 +1,2 @@
+# /etc/sudoers.d/painel — o usuário "painel" só pode executar estes dois programas.
+painel ALL=(root) NOPASSWD: /usr/local/sbin/gerenciar_usuarios_ftp, /usr/local/sbin/painel-helper

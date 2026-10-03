@@ -1,0 +1,32 @@
+# /etc/nginx/sites-available/painel
+# Painel web em porta própria (8080): outra origem para o navegador, então
+# os sites dos alunos (porta 80) não conseguem usar a sessão do painel.
+
+# Limite de tentativas de login por IP (10 por minuto, com folga de 5)
+limit_req_zone $binary_remote_addr zone=painel_login:1m rate=10r/m;
+
+server {
+    listen 8080;
+    listen [::]:8080;
+
+    server_name _;
+
+    location = /        { return 301 /_painel/; }
+    location = /_painel { return 301 /_painel/; }
+
+    location = /_painel/api/login {
+        limit_req zone=painel_login burst=5 nodelay;
+        limit_req_status 429;
+        proxy_pass http://127.0.0.1:8001/api/login;
+        include /etc/nginx/painel-proxy.conf;
+    }
+
+    location /_painel/ {
+        proxy_pass http://127.0.0.1:8001/;
+        include /etc/nginx/painel-proxy.conf;
+    }
+
+    location / {
+        return 404;
+    }
+}

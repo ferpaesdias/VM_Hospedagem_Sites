@@ -1,0 +1,10 @@
+# Todos os arquivos de texto com quebra de linha no padrão Linux (LF),
+# mesmo quando o repositório é editado no Windows. Scripts e arquivos de
+# configuração com CRLF quebram no servidor ($'\r': command not found).
+* text=auto eol=lf
+
+# Arquivos sem extensão que precisam ser tratados como texto
+painel/painel-helper text eol=lf
+config/nginx-projetos text eol=lf
+painel/deploy/nginx-painel text eol=lf
+painel/deploy/sudoers-painel text eol=lf
