@@ -35,7 +35,11 @@ timedatectl set-timezone America/Sao_Paulo
 Confira:
 
 ```bash
-$ timedatectl | grep "Time zone"
+timedatectl | grep "Time zone"
+```
+
+Output:
+```bash
                 Time zone: America/Sao_Paulo (-03, -0300)
 ```
 
@@ -48,7 +52,11 @@ $ timedatectl | grep "Time zone"
 Verifique se o disco adicional foi reconhecido
 
 ```bash
-$ lsblk
+lsblk
+```
+
+Output:
+```bash
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda      8:0    0   20G  0 disk 
 ├─sda1   8:1    0  966M  0 part /boot/efi
@@ -75,7 +83,11 @@ parted -s /dev/sdb mklabel msdos mkpart primary ext4 0% 100%
 Execute o comando `lsblk` novamente
 
 ```bash
-$ lsblk 
+lsblk 
+```
+
+Output:
+```bash
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 sda      8:0    0   20G  0 disk 
 ├─sda1   8:1    0  966M  0 part /boot/efi
@@ -95,7 +107,11 @@ A partição `sdb1` foi criada.
 Formate o disco com o sistema de arquivos `ext4`.
 
 ```bash
-$ mkfs.ext4 /dev/sdb1
+mkfs.ext4 /dev/sdb1
+```
+
+Output:
+```bash
 mke2fs 1.47.2 (1-Jan-2025)
 Creating filesystem with 2621184 4k blocks and 655360 inodes
 Filesystem UUID: efd587fd-f003-4568-b230-0a21b9c45076
@@ -133,7 +149,11 @@ mount /dev/sdb1 /projetos
 Verifique se o disco foi montado:
 
 ```bash
-$ df -h
+df -h
+```
+
+Output:
+```bash
 Sist. Arq.      Tam. Usado Disp. Uso% Montado em
 udev            937M     0  937M   0% /dev
 tmpfs           196M  592K  195M   1% /run
@@ -157,14 +177,17 @@ umount /dev/sdb1
 Execute o comando `blkid` para descobrir o **UUID** da partição
 
 ```bash
-$ blkid
+blkid
+```
+
+Output:
+```bash
 /dev/sdb1: UUID="efd587fd-f003-4568-b230-0a21b9c45076" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="f8291f20-01"
 /dev/sda2: UUID="d6b90fad-ab92-4a64-bfba-5ab228a6510d" BLOCK_SIZE="4096" TYPE="ext4" PARTUUID="66ec5a7f-0b37-4809-8eae-9f3e09ea8d87"
 /dev/sda3: UUID="0e670e65-5581-4b3f-8ddc-1495075400d8" TYPE="swap" PARTUUID="30e05d6e-3aa0-497b-8e66-e39ac14f2126"
 /dev/sda1: UUID="B65D-E353" BLOCK_SIZE="512" TYPE="vfat" PARTUUID="5b1a3ab4-2b20-4a23-be23-cadb80345b28"
 ```
-
-A saída do comando mostra que o **UUID** da partição `/dev/sdb1` é: `efd587fd-f003-4568-b230-0a21b9c45076`. 
+A saída do comando mostra que o **UUID** da partição `/dev/sdb1` é: `efd587fd-f003-4568-b230-0a21b9c45076`. O **UUID** será usado no próximo passo.
 
 <br/>
 
@@ -204,7 +227,11 @@ mount -a
 
 Execute o  comando `df -h`:
 ```bash
-$ df -h
+df -h
+```
+
+Output:
+```bash
 Sist. Arq.      Tam. Usado Disp. Uso% Montado em
 udev            937M     0  937M   0% /dev
 tmpfs           196M  600K  195M   1% /run
