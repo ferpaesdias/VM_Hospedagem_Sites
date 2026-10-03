@@ -10,7 +10,9 @@ Passos necessários:
 	- [4. Montar disco](#4-montar-disco)
 		- [Montar o disco de forma permanente](#montar-o-disco-de-forma-permanente)
 
-**Obs**.: Considere que a VM já tenha um disco adicional configurado.
+**Obs**.: Considere que a VM já tenha um disco adicional configurado.   
+
+**Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
 
 <br/>
 

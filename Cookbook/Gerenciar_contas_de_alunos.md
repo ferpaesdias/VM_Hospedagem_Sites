@@ -17,6 +17,8 @@ Passos necessários:
   - [5. Log e problemas comuns](#5-log-e-problemas-comuns)
   - [6. Teste completo](#6-teste-completo)
 
+**Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
+
 <br/>
 
 ***
@@ -24,7 +26,7 @@ Passos necessários:
 ## 1. Instalar o script
 
 ```bash
-sudo install -m 750 -o root -g root Cookbook/gerenciar_usuarios_ftp.sh /usr/local/sbin/gerenciar_usuarios_ftp
+install -m 750 -o root -g root Cookbook/gerenciar_usuarios_ftp.sh /usr/local/sbin/gerenciar_usuarios_ftp
 ```
 
 <br/>
@@ -32,7 +34,7 @@ sudo install -m 750 -o root -g root Cookbook/gerenciar_usuarios_ftp.sh /usr/loca
 Para ver a ajuda:
 
 ```bash
-sudo gerenciar_usuarios_ftp --help
+gerenciar_usuarios_ftp --help
 ```
 
 <br/>
@@ -48,7 +50,7 @@ O login é a parte do e-mail antes do `@`, sem o ponto: `fulano.dsilva@escola.ed
 Um aluno:
 
 ```bash
-sudo gerenciar_usuarios_ftp --add turma01 fulanodsilva
+gerenciar_usuarios_ftp --add turma01 fulanodsilva
 ```
 
 <br/>
@@ -56,7 +58,7 @@ sudo gerenciar_usuarios_ftp --add turma01 fulanodsilva
 Vários alunos, a partir de um CSV no formato `turma,login` (veja o [exemplo_arquivo.csv](exemplo_arquivo.csv)):
 
 ```bash
-sudo gerenciar_usuarios_ftp --add-csv Cookbook/exemplo_arquivo.csv
+gerenciar_usuarios_ftp --add-csv Cookbook/exemplo_arquivo.csv
 ```
 - Aceita vírgula ou ponto e vírgula, como os CSV gerados pelo Excel.
 - Ignora linhas vazias, comentários (`#`) e a linha de cabeçalho.
@@ -77,8 +79,8 @@ Criar de novo uma conta que já existe na mesma turma não altera nada, nem a se
 ⚠️ Remover um aluno apaga a conta e **todos os arquivos do site**, sem volta. Se for o último aluno da turma, a pasta da turma também é removida.
 
 ```bash
-sudo gerenciar_usuarios_ftp --rm turma01 fulanodsilva
-sudo gerenciar_usuarios_ftp --rm-csv Cookbook/exemplo_arquivo.csv
+gerenciar_usuarios_ftp --rm turma01 fulanodsilva
+gerenciar_usuarios_ftp --rm-csv Cookbook/exemplo_arquivo.csv
 ```
 
 <br/>
@@ -112,21 +114,21 @@ O shell `/bin/shell_ftp` é criado na primeira execução e registrado em `/etc/
 Todas as ações ficam registradas em `/var/log/vm_hospedagem.log`:
 
 ```bash
-sudo tail -f /var/log/vm_hospedagem.log
+tail -f /var/log/vm_hospedagem.log
 ```
 
 <br/>
 
 **"já existe um usuário fora deste padrão":** o login já pertence a um aluno de outra turma, a um docente ou a um usuário do sistema. Confira com `getent passwd login`.
 
-**"a pasta já existe sem conta":** sobrou uma pasta de um aluno removido manualmente. Confira o conteúdo e apague com `sudo rm -r /projetos/turma/login` antes de criar a conta.
+**"a pasta já existe sem conta":** sobrou uma pasta de um aluno removido manualmente. Confira o conteúdo e apague com `rm -r /projetos/turma/login` antes de criar a conta.
 
 **O aluno apagou a pasta `uploads/`:** o painel não permite apagá-la, mas pelo FTP é possível. Recrie com:
 
 ```bash
-sudo mkdir /projetos/turma01/fulanodsilva/uploads
-sudo chown fulanodsilva:www-data /projetos/turma01/fulanodsilva/uploads
-sudo chmod 2770 /projetos/turma01/fulanodsilva/uploads
+mkdir /projetos/turma01/fulanodsilva/uploads
+chown fulanodsilva:www-data /projetos/turma01/fulanodsilva/uploads
+chmod 2770 /projetos/turma01/fulanodsilva/uploads
 ```
 
 <br/>
@@ -140,7 +142,7 @@ Este teste confere, de uma vez, o Nginx, o PHP, o FTP e a conta de aluno.
 Crie uma conta de teste:
 
 ```bash
-sudo gerenciar_usuarios_ftp --add turma01 teste
+gerenciar_usuarios_ftp --add turma01 teste
 ```
 
 <br/>
@@ -156,5 +158,5 @@ Acesse `http://[IP]/turma01/teste/`. A página deve mostrar **"Deu certo!"** e 7
 Ao terminar, remova a conta de teste:
 
 ```bash
-sudo gerenciar_usuarios_ftp --rm turma01 teste
+gerenciar_usuarios_ftp --rm turma01 teste
 ```

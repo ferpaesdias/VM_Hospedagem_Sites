@@ -10,7 +10,9 @@ Passos necessários:
   - [5. Serviços](#5-serviços)
   - [6. Testes](#6-testes)
 
-**Obs**.: Execute os comandos a partir da raiz deste repositório. Os dois arquivos de configuração ficam na pasta [`config/`](../config) e são copiados prontos, sem edição.
+**Obs**.: Execute os comandos a partir da raiz deste repositório. Os dois arquivos de configuração ficam na pasta [`config/`](../config) e são copiados prontos, sem edição.   
+
+**Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
 
 <br/>
 
@@ -19,9 +21,9 @@ Passos necessários:
 ## 1. Instalar softwares necessários
 
 ```bash
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y nginx curl php-fpm php-mysql php-mbstring php-xml php-curl php-gd php-zip php-sqlite3
+apt update
+apt upgrade -y
+apt install -y nginx curl php-fpm php-mysql php-mbstring php-xml php-curl php-gd php-zip php-sqlite3
 ```
 - `nginx`: servidor web.
 - `php-fpm`: executa os arquivos `.php` entregues pelo Nginx. Roda como `www-data`, o mesmo grupo das pastas dos alunos.
@@ -39,8 +41,8 @@ sudo apt install -y nginx curl php-fpm php-mysql php-mbstring php-xml php-curl p
 Será usado o diretório `/projetos` criado em [Configurar o Sistema Operacional](Configurar_Sistema_Operacional.md).
 
 ```bash
-sudo chown root:www-data /projetos
-sudo chmod 751 /projetos
+chown root:www-data /projetos
+chmod 751 /projetos
 ```
 - `www-data` é o usuário do Nginx e do PHP-FPM, e precisa ler as pastas.
 - O `1` final (execução para "outros") permite que cada aluno atravesse `/projetos` até a própria pasta. Com `750`, os alunos não conseguem chegar ao próprio `HOME`.
@@ -64,9 +66,9 @@ Como esses valores são definidos por `PHP_ADMIN_VALUE`, os alunos não consegue
 Copie o arquivo [`config/nginx-projetos`](../config/nginx-projetos), ative-o e desative o site padrão do Nginx:
 
 ```bash
-sudo cp config/nginx-projetos /etc/nginx/sites-available/projetos
-sudo ln -s /etc/nginx/sites-available/projetos /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
+cp config/nginx-projetos /etc/nginx/sites-available/projetos
+ln -s /etc/nginx/sites-available/projetos /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
 ```
 
 <br/>
@@ -131,7 +133,7 @@ session.cookie_path=/$1/$2/";
 Teste a configuração:
 
 ```bash
-sudo nginx -t
+nginx -t
 ```
 
 Output:
@@ -150,7 +152,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 As configurações do PHP ficam num arquivo próprio em `conf.d/`. Ele é lido depois do `php.ini`, então os valores dele prevalecem sem precisar editar o `php.ini`.
 
 ```bash
-sudo cp config/php-hospedagem.ini /etc/php/8.4/fpm/conf.d/99-hospedagem.ini
+cp config/php-hospedagem.ini /etc/php/8.4/fpm/conf.d/99-hospedagem.ini
 ```
 
 <br/>
@@ -189,8 +191,8 @@ expose_php = Off
 Habilitar e reiniciar o Nginx e o PHP-FPM:
 
 ```bash
-sudo systemctl enable nginx.service php8.4-fpm.service
-sudo systemctl restart php8.4-fpm.service nginx.service
+systemctl enable nginx.service php8.4-fpm.service
+systemctl restart php8.4-fpm.service nginx.service
 ```
 
 <br/>
@@ -203,7 +205,7 @@ systemctl status nginx.service php8.4-fpm.service
 
 <br/>
 
-**Obs**.: Depois de alterar o arquivo do Nginx, basta `sudo nginx -t && sudo systemctl reload nginx.service`. Depois de alterar o arquivo do PHP, é preciso `sudo systemctl restart php8.4-fpm.service`.
+**Obs**.: Depois de alterar o arquivo do Nginx, basta `nginx -t && systemctl reload nginx.service`. Depois de alterar o arquivo do PHP, é preciso `systemctl restart php8.4-fpm.service`.
 
 <br/>
 
@@ -214,11 +216,11 @@ systemctl status nginx.service php8.4-fpm.service
 Crie uma pasta de teste no formato `/turma/aluno/`, com uma página HTML, uma página PHP e um PHP dentro da `uploads/`:
 
 ```bash
-sudo mkdir -p /projetos/turmateste/aluno/uploads
+mkdir -p /projetos/turmateste/aluno/uploads
 echo '<h1>Nginx OK</h1>' | sudo tee /projetos/turmateste/aluno/index.html > /dev/null
 echo '<?php echo "PHP OK - ", date_default_timezone_get(), " - ", date("d/m/Y H:i"), "\n";' | sudo tee /projetos/turmateste/aluno/teste.php > /dev/null
 echo '<?php echo "não deveria executar";' | sudo tee /projetos/turmateste/aluno/uploads/teste.php > /dev/null
-sudo chown -R root:www-data /projetos/turmateste
+chown -R root:www-data /projetos/turmateste
 ```
 
 <br/>
@@ -253,7 +255,7 @@ $ curl -s -o /dev/null -w "%{http_code}\n" http://localhost/turmateste/aluno/upl
 Depois dos testes, remova a pasta:
 
 ```bash
-sudo rm -r /projetos/turmateste
+rm -r /projetos/turmateste
 ```
 
 <br/>

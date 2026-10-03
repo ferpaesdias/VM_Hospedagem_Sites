@@ -8,7 +8,9 @@ Passos necessários:
   - [3. Serviço vsftpd](#3-serviço-vsftpd)
   - [4. Testes](#4-testes)
 
-**Obs**.: Execute os comandos a partir da raiz deste repositório. O arquivo de configuração fica na pasta [`config/`](../config) e é copiado pronto, sem edição.
+**Obs**.: Execute os comandos a partir da raiz deste repositório. O arquivo de configuração fica na pasta [`config/`](../config) e é copiado pronto, sem edição.   
+
+**Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
 
 <br/>
 
@@ -17,9 +19,9 @@ Passos necessários:
 ## 1. Instalar o vsftpd
 
 ```bash
-sudo apt update
-sudo apt upgrade -y
-sudo apt install -y vsftpd
+apt update
+apt upgrade -y
+apt install -y vsftpd
 ```
 
 <br/>
@@ -33,8 +35,8 @@ O vsftpd não tem uma pasta `conf.d/`: toda a configuração fica em `/etc/vsftp
 Faça um backup do arquivo original e copie o arquivo [`config/vsftpd.conf`](../config/vsftpd.conf):
 
 ```bash
-sudo cp /etc/vsftpd.conf /etc/vsftpd.conf.original
-sudo cp config/vsftpd.conf /etc/vsftpd.conf
+cp /etc/vsftpd.conf /etc/vsftpd.conf.original
+cp config/vsftpd.conf /etc/vsftpd.conf
 ```
 
 <br/>
@@ -140,14 +142,14 @@ ssl_enable=NO
 Habilitar e reiniciar o serviço:
 
 ```bash
-sudo systemctl enable vsftpd.service
-sudo systemctl restart vsftpd.service
+systemctl enable vsftpd.service
+systemctl restart vsftpd.service
 systemctl status vsftpd.service
 ```
 
 <br/>
 
-**Obs**.: Depois de alterar o `/etc/vsftpd.conf`, é preciso `sudo systemctl restart vsftpd.service`.
+**Obs**.: Depois de alterar o `/etc/vsftpd.conf`, é preciso `systemctl restart vsftpd.service`.
 
 <br/>
 
@@ -158,7 +160,7 @@ systemctl status vsftpd.service
 Crie uma conta de teste com o script do repositório (o guia [Gerenciar contas de alunos](Gerenciar_contas_de_alunos.md) explica o script em detalhes):
 
 ```bash
-sudo bash Cookbook/gerenciar_usuarios_ftp.sh --add turmateste teste
+bash Cookbook/gerenciar_usuarios_ftp.sh --add turmateste teste
 ```
 
 <br/>
@@ -200,7 +202,7 @@ curl: (9) Server denied you to change to the given directory
 Os envios ficam registrados no log:
 
 ```bash
-sudo tail /var/log/vsftpd.log
+tail /var/log/vsftpd.log
 ```
 
 <br/>
@@ -208,6 +210,6 @@ sudo tail /var/log/vsftpd.log
 Remova a conta de teste (o script pede confirmação):
 
 ```bash
-sudo bash Cookbook/gerenciar_usuarios_ftp.sh --rm turmateste teste
+bash Cookbook/gerenciar_usuarios_ftp.sh --rm turmateste teste
 rm /tmp/index.html
 ```

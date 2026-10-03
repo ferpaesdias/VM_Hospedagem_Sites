@@ -19,7 +19,9 @@ Passos necessários:
   - [9. Testes](#9-testes)
   - [Como o painel funciona](#como-o-painel-funciona)
 
-**Obs**.: Execute os comandos a partir da raiz deste repositório. O painel usa HTTP sem TLS, assim como o FTP: as senhas trafegam em texto claro, então use só em rede confiável.
+**Obs**.: Execute os comandos a partir da raiz deste repositório. O painel usa HTTP sem TLS, assim como o FTP: as senhas trafegam em texto claro, então use só em rede confiável.   
+
+**Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
 
 <br/>
 
@@ -28,8 +30,8 @@ Passos necessários:
 ## 1. Instalar softwares necessários
 
 ```bash
-sudo apt update
-sudo apt install -y python3-flask gunicorn apache2-utils openssl
+apt update
+apt install -y python3-flask gunicorn apache2-utils openssl
 ```
 - `python3-flask` e `gunicorn`: executam o backend do painel.
 - `apache2-utils`: fornece o comando `htpasswd` (senhas dos docentes no painel).
@@ -41,8 +43,8 @@ sudo apt install -y python3-flask gunicorn apache2-utils openssl
 ## 2. Instalar os scripts
 
 ```bash
-sudo install -m 750 -o root -g root Cookbook/gerenciar_usuarios_ftp.sh /usr/local/sbin/gerenciar_usuarios_ftp
-sudo install -m 750 -o root -g root painel/painel-helper /usr/local/sbin/painel-helper
+install -m 750 -o root -g root Cookbook/gerenciar_usuarios_ftp.sh /usr/local/sbin/gerenciar_usuarios_ftp
+install -m 750 -o root -g root painel/painel-helper /usr/local/sbin/painel-helper
 ```
 - `gerenciar_usuarios_ftp`: cria e remove as contas (veja [Gerenciar contas de alunos](Gerenciar_contas_de_alunos.md)).
 - `painel-helper`: confere e troca senhas e grava os arquivos **como o próprio aluno**, com as mesmas permissões do FTP.
@@ -56,7 +58,7 @@ sudo install -m 750 -o root -g root painel/painel-helper /usr/local/sbin/painel-
 O painel roda com um usuário próprio, sem login. **Não use o `www-data`**: os sites PHP dos alunos rodam como `www-data` e teriam acesso ao sudo.
 
 ```bash
-sudo useradd --system --home /var/lib/painel --create-home --shell /usr/sbin/nologin painel
+useradd --system --home /var/lib/painel --create-home --shell /usr/sbin/nologin painel
 ```
 
 <br/>
@@ -64,8 +66,8 @@ sudo useradd --system --home /var/lib/painel --create-home --shell /usr/sbin/nol
 O usuário `painel` só pode executar os dois scripts do passo anterior:
 
 ```bash
-sudo install -m 440 painel/deploy/sudoers-painel /etc/sudoers.d/painel
-sudo visudo -cf /etc/sudoers.d/painel
+install -m 440 painel/deploy/sudoers-painel /etc/sudoers.d/painel
+visudo -cf /etc/sudoers.d/painel
 ```
 
 <br/>
@@ -75,11 +77,11 @@ sudo visudo -cf /etc/sudoers.d/painel
 ## 4. Copiar o painel
 
 ```bash
-sudo mkdir -p /opt/painel/static
-sudo cp painel/app.py /opt/painel/
-sudo cp painel/static/index.html /opt/painel/static/
-sudo chown -R root:painel /opt/painel
-sudo chmod -R u=rwX,g=rX,o= /opt/painel
+mkdir -p /opt/painel/static
+cp painel/app.py /opt/painel/
+cp painel/static/index.html /opt/painel/static/
+chown -R root:painel /opt/painel
+chmod -R u=rwX,g=rX,o= /opt/painel
 ```
 
 <br/>
@@ -97,18 +99,18 @@ Nenhum dos dois pode ser lido pelo `www-data`.
 TOKEN=$(openssl rand -hex 32)
 SEGREDO=$(openssl rand -hex 32)
 
-sudo mkdir -p /etc/painel
+mkdir -p /etc/painel
 printf 'PAINEL_TOKEN=%s\nPAINEL_SEGREDO=%s\n' "$TOKEN" "$SEGREDO" | sudo tee /etc/painel/painel.env > /dev/null
-sudo chmod 600 /etc/painel/painel.env
+chmod 600 /etc/painel/painel.env
 
-sudo tee /etc/nginx/painel-proxy.conf > /dev/null << FIM
+tee /etc/nginx/painel-proxy.conf > /dev/null << FIM
 proxy_set_header X-Painel-Token "${TOKEN}";
 proxy_set_header Host \$host;
 proxy_set_header X-Real-IP \$remote_addr;
 proxy_read_timeout 300s;
 client_max_body_size 21m;
 FIM
-sudo chmod 600 /etc/nginx/painel-proxy.conf
+chmod 600 /etc/nginx/painel-proxy.conf
 ```
 
 <br/>
@@ -124,9 +126,9 @@ A senha inicial das contas de aluno é `123@mudar`. Para usar outra, acrescente 
 Os docentes têm uma senha própria do painel, diferente da senha Linux (que dá acesso ao `sudo`). A opção `-B` (bcrypt) é obrigatória. O `-c` cria o arquivo: use só no primeiro docente.
 
 ```bash
-sudo htpasswd -B -C 10 -c /etc/painel/docentes.htpasswd fernandopdias
-sudo htpasswd -B -C 10 /etc/painel/docentes.htpasswd outrodocente
-sudo chmod 600 /etc/painel/docentes.htpasswd
+htpasswd -B -C 10 -c /etc/painel/docentes.htpasswd fernandopdias
+htpasswd -B -C 10 /etc/painel/docentes.htpasswd outrodocente
+chmod 600 /etc/painel/docentes.htpasswd
 ```
 
 <br/>
@@ -134,7 +136,7 @@ sudo chmod 600 /etc/painel/docentes.htpasswd
 Para trocar a senha de um docente, rode o mesmo comando sem o `-c`. Para remover um docente:
 
 ```bash
-sudo htpasswd -D /etc/painel/docentes.htpasswd outrodocente
+htpasswd -D /etc/painel/docentes.htpasswd outrodocente
 ```
 
 <br/>
@@ -144,15 +146,15 @@ sudo htpasswd -D /etc/painel/docentes.htpasswd outrodocente
 ## 7. Serviço do painel
 
 ```bash
-sudo cp painel/deploy/painel.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now painel.service
+cp painel/deploy/painel.service /etc/systemd/system/
+systemctl daemon-reload
+systemctl enable --now painel.service
 systemctl status painel.service
 ```
 
 <br/>
 
-**Obs**.: Sempre que o `app.py` for atualizado, reinicie o serviço com `sudo systemctl restart painel.service`. Mudanças só no `index.html` não precisam de reinício.
+**Obs**.: Sempre que o `app.py` for atualizado, reinicie o serviço com `systemctl restart painel.service`. Mudanças só no `index.html` não precisam de reinício.
 
 <br/>
 
@@ -163,10 +165,10 @@ systemctl status painel.service
 O painel fica em um `server` próprio, na porta 8080. Por estar em outra porta, ele é outra origem para o navegador. Assim, um JavaScript ou PHP colocado no site de um aluno não consegue usar a sessão de quem está logado no painel.
 
 ```bash
-sudo cp painel/deploy/nginx-painel /etc/nginx/sites-available/painel
-sudo ln -s /etc/nginx/sites-available/painel /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl reload nginx.service
+cp painel/deploy/nginx-painel /etc/nginx/sites-available/painel
+ln -s /etc/nginx/sites-available/painel /etc/nginx/sites-enabled/
+nginx -t
+systemctl reload nginx.service
 ```
 
 <br/>

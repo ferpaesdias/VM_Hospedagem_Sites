@@ -114,6 +114,10 @@ Toda conta de aluno nasce com a senha `123@mudar`, e o painel obriga a troca no 
 
 ## Como usar
 
+> [!IMPORTANT]
+> Os comandos dos guias alteram a configuração do sistema e precisam de privilégios de root.
+> Execute os comandos como `root` ou use o `sudo`.
+
 Clone o repositório na VM. Todos os guias executam os comandos a partir da raiz dele:
 
 ```bash
