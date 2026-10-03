@@ -168,7 +168,11 @@ bash Cookbook/gerenciar_usuarios_ftp.sh --add turmateste teste
 Liste a pasta do aluno pelo FTP. Devem aparecer só os itens do site, como `uploads`:
 
 ```bash
-$ curl -u teste:123@mudar ftp://localhost/
+curl -u teste:123@mudar ftp://localhost/
+```
+
+Output:
+```bash
 drwxrws---    2 1004     33           4096 Oct 01 17:08 uploads
 ```
 
@@ -178,8 +182,8 @@ Envie um arquivo e confira que o Nginx já publica:
 
 ```bash
 echo '<h1>Enviado pelo FTP</h1>' > /tmp/index.html
-curl -u teste:123@mudar -T /tmp/index.html ftp://localhost/
-curl http://localhost/turmateste/teste/
+curl -su teste:123@mudar -T /tmp/index.html ftp://localhost/
+curl -s http://localhost/turmateste/teste/
 ```
 
 Output:
@@ -193,7 +197,11 @@ Output:
 Confira que o aluno não sai da própria pasta. Dentro do chroot não existe `/etc`, então o servidor nega o acesso:
 
 ```bash
-$ curl -u teste:123@mudar ftp://localhost/etc/passwd
+curl -u teste:123@mudar ftp://localhost/etc/passwd
+```
+
+Output:
+```bash
 curl: (9) Server denied you to change to the given directory
 ```
 
