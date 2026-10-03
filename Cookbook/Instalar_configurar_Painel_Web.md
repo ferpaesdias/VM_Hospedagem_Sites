@@ -126,14 +126,15 @@ A senha inicial das contas de aluno é `123@mudar`. Para usar outra, acrescente 
 Os docentes têm uma senha própria do painel, diferente da senha Linux (que dá acesso ao `sudo`). A opção `-B` (bcrypt) é obrigatória. O `-c` cria o arquivo: use só no primeiro docente.
 
 ```bash
-htpasswd -B -C 10 -c /etc/painel/docentes.htpasswd fernandopdias
-htpasswd -B -C 10 /etc/painel/docentes.htpasswd outrodocente
+htpasswd -B -C 10 -c /etc/painel/docentes.htpasswd nomedocente
+htpasswd -B -C 10 /etc/painel/docentes.htpasswd nomeoutrodocente
 chmod 600 /etc/painel/docentes.htpasswd
 ```
+Para trocar a senha de um docente, rode o mesmo comando sem o `-c`. 
 
 <br/>
 
-Para trocar a senha de um docente, rode o mesmo comando sem o `-c`. Para remover um docente:
+Para remover um docente:
 
 ```bash
 htpasswd -D /etc/painel/docentes.htpasswd outrodocente
