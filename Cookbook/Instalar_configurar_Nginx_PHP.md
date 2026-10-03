@@ -228,7 +228,11 @@ chown -R root:www-data /projetos/turmateste
 Página estática:
 
 ```bash
-$ curl http://localhost/turmateste/aluno/
+curl http://localhost/turmateste/aluno/
+```
+
+Output:
+```bash
 <h1>Nginx OK</h1>
 ```
 
@@ -237,7 +241,11 @@ $ curl http://localhost/turmateste/aluno/
 PHP e fuso horário (a hora deve ser a de Brasília):
 
 ```bash
-$ curl http://localhost/turmateste/aluno/teste.php
+curl http://localhost/turmateste/aluno/teste.php
+```
+
+Output:
+```bash
 PHP OK - America/Sao_Paulo - 01/10/2026 16:31
 ```
 
@@ -246,7 +254,11 @@ PHP OK - America/Sao_Paulo - 01/10/2026 16:31
 PHP dentro da `uploads/` não executa:
 
 ```bash
-$ curl -s -o /dev/null -w "%{http_code}\n" http://localhost/turmateste/aluno/uploads/teste.php
+curl -s -o /dev/null -w "%{http_code}\n" http://localhost/turmateste/aluno/uploads/teste.php
+```
+
+Output:
+```bash
 403
 ```
 
