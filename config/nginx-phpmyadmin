@@ -1,0 +1,52 @@
+# /etc/nginx/sites-available/phpmyadmin
+# phpMyAdmin em porta própria (8081), no endereço /_phpmyadmin/.
+#   - Porta própria: outra origem para o navegador, então os sites dos alunos
+#     (porta 80) não conseguem usar a sessão do phpMyAdmin.
+#   - Endereço /_phpmyadmin/: o cookie de sessão só vale para esse caminho.
+#     Os cookies não separam portas, mas nenhum site de aluno começa com "_"
+#     (turma e aluno usam só letras e números).
+
+server {
+    listen 8081;
+    listen [::]:8081;
+
+    server_name _;
+
+    # Importação de arquivos .sql (igual ao upload_max_filesize do PHP)
+    client_max_body_size 20M;
+
+    location = /               { return 301 /_phpmyadmin/; }
+    location = /_phpmyadmin    { return 301 /_phpmyadmin/; }
+
+    location ^~ /_phpmyadmin/ {
+        alias /usr/share/phpmyadmin/;
+        index index.php;
+
+        # Bloqueia arquivos ocultos e as pastas internas do phpMyAdmin
+        location ~ /\. {
+            deny all;
+        }
+        location ~ ^/_phpmyadmin/(libraries|templates|setup)/ {
+            deny all;
+        }
+
+        # Com "alias", o caminho do script é informado de forma explícita.
+        #   open_basedir:        pastas do pacote phpmyadmin (as mesmas do /etc/phpmyadmin/apache.conf)
+        #                        mais /tmp (importação de arquivos) e as sessões do PHP
+        #   session.cookie_path: o cookie de sessão vale só para o /_phpmyadmin/
+        # Os dois valores precisam ser definidos em TODA requisição: o PHP-FPM mantém os
+        # valores da requisição anterior do mesmo processo, inclusive os dos sites dos alunos.
+        # A quebra de linha dentro das aspas separa as duas diretivas.
+        location ~ ^/_phpmyadmin/(.+\.php)$ {
+            include fastcgi_params;
+            fastcgi_param SCRIPT_FILENAME /usr/share/phpmyadmin/$1;
+            fastcgi_param PHP_ADMIN_VALUE "open_basedir=/usr/share/phpmyadmin/:/usr/share/doc/phpmyadmin/:/etc/phpmyadmin/:/var/lib/phpmyadmin/:/usr/share/php/:/usr/share/javascript/:/tmp/:/var/lib/php/sessions/
+session.cookie_path=/_phpmyadmin/";
+            fastcgi_pass unix:/run/php/php8.4-fpm.sock;
+        }
+    }
+
+    location / {
+        return 404;
+    }
+}
