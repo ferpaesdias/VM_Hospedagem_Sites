@@ -19,6 +19,8 @@ Passos necessários:
 
 **Obs**.: Os comandos precisam de privilégios de root. Execute os comandos como `root` ou use o `sudo`.
 
+**Obs**.: Para que cada conta receba também um banco de dados, instale o MariaDB **antes** de criar as contas, seguindo o guia [Instalar e configurar o MariaDB e o phpMyAdmin](Instalar_configurar_MariaDB_phpMyAdmin.md). Sem o MariaDB, o script cria apenas a conta e o site.
+
 <br/>
 
 ***
@@ -68,7 +70,7 @@ gerenciar_usuarios_ftp --add-csv Cookbook/exemplo_arquivo.csv
 
 Toda conta nova recebe a senha `123@mudar`. O painel obriga o aluno a trocá-la no primeiro acesso.
 
-Criar de novo uma conta que já existe na mesma turma não altera nada, nem a senha do aluno.
+Criar de novo uma conta que já existe na mesma turma não altera a conta, os arquivos nem a senha do aluno. Se o MariaDB estiver instalado e a conta ainda não tiver banco de dados, o banco é criado.
 
 <br/>
 
@@ -76,7 +78,7 @@ Criar de novo uma conta que já existe na mesma turma não altera nada, nem a se
 
 ## 3. Remover contas
 
-⚠️ Remover um aluno apaga a conta e **todos os arquivos do site**, sem volta. Se for o último aluno da turma, a pasta da turma também é removida.
+⚠️ Remover um aluno apaga a conta, **todos os arquivos do site** e **o banco de dados do aluno**, sem volta. Se for o último aluno da turma, a pasta da turma também é removida.
 
 ```bash
 gerenciar_usuarios_ftp --rm turma01 fulanodsilva
@@ -102,6 +104,7 @@ Para `--add turma01 fulanodsilva`:
 | HOME e raiz do site | `/projetos/turma01/fulanodsilva`, `fulanodsilva:www-data`, `2750` |
 | Pasta de gravação do PHP | `/projetos/turma01/fulanodsilva/uploads`, `fulanodsilva:www-data`, `2770` |
 | Endereço do site | `http://[IP]/turma01/fulanodsilva/` |
+| Banco de dados (se o MariaDB estiver instalado) | banco `fulanodsilva` e usuário `fulanodsilva`@`localhost`, com a senha `123@mudar` e permissão só nesse banco |
 
 O shell `/bin/shell_ftp` é criado na primeira execução e registrado em `/etc/shells`, exigência do vsftpd para aceitar o login.
 
@@ -122,6 +125,10 @@ tail -f /var/log/vm_hospedagem.log
 **"já existe um usuário fora deste padrão":** o login já pertence a um aluno de outra turma, a um docente ou a um usuário do sistema. Confira com `getent passwd login`.
 
 **"a pasta já existe sem conta":** sobrou uma pasta de um aluno removido manualmente. Confira o conteúdo e apague com `rm -r /projetos/turma/login` antes de criar a conta.
+
+**"o nome ... é reservado pelo MariaDB" ou "já existe um banco ... sem usuário de aluno":** a conta foi criada, mas o banco não. O login coincide com um banco do sistema (`mysql`, `sys`, `test`) ou com um banco de outra pessoa, que não pode ser entregue ao aluno. Confira com `mariadb -e "SHOW DATABASES;"` e, se o banco sobrar, remova-o à mão antes de executar o `--add` de novo.
+
+**"não foi possível acessar o MariaDB":** o serviço está parado. Inicie com `systemctl start mariadb.service` e execute o `--add` de novo: o script cria só o banco que falta. Na remoção, o erro não impede a exclusão da conta; o log mostra o comando para apagar o banco à mão.
 
 **O aluno apagou a pasta `uploads/`:** o painel não permite apagá-la, mas pelo FTP é possível. Recrie com:
 
