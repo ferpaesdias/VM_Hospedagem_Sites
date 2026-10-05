@@ -2,8 +2,8 @@
 
 Painel acessado pelo navegador em `http://[IP]:8080/_painel/`.
 
-- **Docentes:** criam e removem contas de aluno (individualmente ou com `.csv`) e redefinem senhas.
-- **Alunos:** entram com o mesmo login e senha do FTP, enviam e apagam os arquivos do site, esvaziam a pasta `uploads/` e alteram a senha.
+- **Docentes:** criam e removem contas de aluno (individualmente ou com `.csv`), redefinem senhas (a do painel e do FTP e a do banco de dados do aluno) e alteram a própria senha do painel.
+- **Alunos:** entram com o mesmo login e senha do FTP, enviam e apagam os arquivos do site, esvaziam a pasta `uploads/`, alteram a senha e abrem o phpMyAdmin pelo link do painel (se o [MariaDB e o phpMyAdmin](Instalar_configurar_MariaDB_phpMyAdmin.md) estiverem instalados).
 
 Passos necessários:
 
@@ -117,6 +117,8 @@ chmod 600 /etc/nginx/painel-proxy.conf
 
 A senha inicial das contas de aluno é `123@mudar`. Para usar outra, acrescente `PAINEL_SENHA_INICIAL=...` ao `/etc/painel/painel.env` e altere a variável `SENHA_INICIAL` do script `gerenciar_usuarios_ftp`.
 
+O link do phpMyAdmin aparece no painel do aluno quando a pasta `/usr/share/phpmyadmin` existe, e usa a porta `8081`. Se você mudou a porta no `config/nginx-phpmyadmin`, acrescente `PAINEL_PORTA_PHPMYADMIN=...` ao `/etc/painel/painel.env`.
+
 <br/>
 
 ***
@@ -130,7 +132,7 @@ htpasswd -B -C 10 -c /etc/painel/docentes.htpasswd nomedocente
 htpasswd -B -C 10 /etc/painel/docentes.htpasswd nomeoutrodocente
 chmod 600 /etc/painel/docentes.htpasswd
 ```
-Para trocar a senha de um docente, rode o mesmo comando sem o `-c`. 
+O próprio docente troca a senha no painel, pelo botão **Alterar senha** no topo da página (a nova senha vale só para o painel, não para o SSH). Se ele esquecer a senha, o administrador define uma nova com o mesmo comando, sem o `-c`.
 
 <br/>
 
