@@ -7,6 +7,10 @@
 #   O HOME do aluno, /projetos/<turma>/<login>/, é também a raiz do site,
 #   publicada pelo Nginx em http://[IP]/<turma>/<login>/.
 #
+#   Se o MariaDB estiver instalado, cada aluno também recebe um banco de dados
+#   e um usuário do banco, ambos com o nome do login. O usuário só enxerga o
+#   próprio banco, que é gerenciado pelo phpMyAdmin.
+#
 #   USO (como root)
 #     gerenciar_usuarios_ftp.sh --add     <turma> <login>
 #     gerenciar_usuarios_ftp.sh --rm      <turma> <login>
@@ -25,10 +29,13 @@
 #   SENHA
 #     Toda conta nova recebe a senha inicial SENHA_INICIAL. O painel web
 #     obriga o aluno a trocá-la no primeiro acesso.
+#     O usuário do banco também nasce com SENHA_INICIAL, mas é independente da
+#     conta Linux: o aluno a troca pelo phpMyAdmin.
 #
 #   ATENÇÃO
-#     Remover um aluno apaga a conta e TODOS os arquivos do site, sem volta.
-#     Se for o último aluno da turma, a pasta da turma também é removida.
+#     Remover um aluno apaga a conta, TODOS os arquivos do site e o banco de
+#     dados, sem volta. Se for o último aluno da turma, a pasta da turma
+#     também é removida.
 #
 ###############################################################################
 
@@ -40,6 +47,8 @@ readonly SENHA_INICIAL="123@mudar"
 readonly ARQUIVO_LOG="/var/log/vm_hospedagem.log"
 readonly RE_TURMA='^[A-Za-z0-9]{1,32}$'
 readonly RE_LOGIN='^[a-z][a-z0-9]{0,31}$'
+# Nomes que o MariaDB já usa: um aluno com esse login receberia acesso ao banco do sistema
+readonly RE_BANCO_RESERVADO='^(mysql|sys|test|root|mariadb)$'
 
 #### ------------------------------------------------------------------------
 #### Mensagens: vão para a tela e para o arquivo de log
@@ -119,6 +128,76 @@ function confirmar() {
 }
 
 #### ------------------------------------------------------------------------
+#### Banco de dados (MariaDB)
+#### O login já foi validado por RE_LOGIN (só letras minúsculas e números),
+#### então pode ser usado direto nos comandos SQL.
+#### ------------------------------------------------------------------------
+function mariadb_instalado() {
+  command -v mariadb &> /dev/null
+}
+
+# Retorna a quantidade (0 ou 1) de usuários do banco com o nome do login
+function usuario_do_banco() {
+  mariadb --batch --skip-column-names --execute \
+    "SELECT COUNT(*) FROM mysql.user WHERE User='$1' AND Host='localhost'"
+}
+
+# Cria o banco e o usuário do aluno. Pode ser executada várias vezes: o que já
+# existe não é alterado, nem a senha do usuário do banco.
+function criar_banco() {
+  local turma=$1 login=$2
+  local existe_usuario existe_banco
+
+  mariadb_instalado || return 0   # sem MariaDB, a conta é criada sem banco
+
+  if [[ $login =~ $RE_BANCO_RESERVADO ]]; then
+    log ERRO "$turma/$login: o nome \"$login\" é reservado pelo MariaDB. O banco não foi criado."
+    return 1
+  fi
+
+  existe_usuario=$(usuario_do_banco "$login") \
+    || { log ERRO "$turma/$login: não foi possível acessar o MariaDB. O banco não foi criado."; return 1; }
+  existe_banco=$(mariadb --batch --skip-column-names --execute \
+    "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$login'")
+
+  # Um banco com esse nome que não é do aluno não pode ser entregue a ele
+  if [[ $existe_banco == 1 && $existe_usuario == 0 ]]; then
+    log ERRO "$turma/$login: já existe um banco \"$login\" sem usuário de aluno. O banco não foi criado."
+    return 1
+  fi
+
+  if ! mariadb --execute "
+    CREATE DATABASE IF NOT EXISTS \`$login\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    CREATE USER IF NOT EXISTS '$login'@'localhost' IDENTIFIED BY '$SENHA_INICIAL' WITH MAX_USER_CONNECTIONS 5;
+    GRANT ALL PRIVILEGES ON \`$login\`.* TO '$login'@'localhost';"; then
+    log ERRO "$turma/$login: o MariaDB falhou ao criar o banco."
+    return 1
+  fi
+
+  [[ $existe_usuario == 0 ]] && log INFO "$turma/$login: banco de dados criado."
+  return 0
+}
+
+# Remove o banco e o usuário do aluno. Só remove se o usuário do banco existir:
+# um banco que não é de aluno nunca é apagado pelo nome.
+function remover_banco() {
+  local turma=$1 login=$2
+  local existe_usuario
+
+  mariadb_instalado || return 0
+
+  existe_usuario=$(usuario_do_banco "$login") \
+    || { log ERRO "$turma/$login: não foi possível acessar o MariaDB. Remova o banco depois: DROP DATABASE \`$login\`; DROP USER '$login'@'localhost';"; return 1; }
+  [[ $existe_usuario == 1 ]] || return 0
+
+  if ! mariadb --execute "DROP DATABASE IF EXISTS \`$login\`; DROP USER IF EXISTS '$login'@'localhost';"; then
+    log ERRO "$turma/$login: o MariaDB falhou ao remover o banco. Remova depois: DROP DATABASE \`$login\`; DROP USER '$login'@'localhost';"
+    return 1
+  fi
+  log INFO "$turma/$login: banco de dados removido."
+}
+
+#### ------------------------------------------------------------------------
 #### Criar e remover
 #### ------------------------------------------------------------------------
 function criar_aluno() {
@@ -129,8 +208,9 @@ function criar_aluno() {
 
   if id "$login" &> /dev/null; then
     if eh_aluno_da_turma "$turma" "$login"; then
-      log INFO "$turma/$login: a conta já existe. Nada foi alterado."
-      return 0
+      log INFO "$turma/$login: a conta já existe. A senha e os arquivos não foram alterados."
+      criar_banco "$turma" "$login"   # completa o banco de contas criadas antes do MariaDB
+      return
     fi
     log ERRO "$turma/$login: já existe um usuário \"$login\" fora deste padrão (outra turma, docente ou sistema)."
     return 1
@@ -164,12 +244,14 @@ function criar_aluno() {
   chmod 2770 "$home/uploads"
 
   log INFO "$turma/$login: conta criada. Senha inicial: $SENHA_INICIAL"
+
+  criar_banco "$turma" "$login"
 }
 
 function remover_aluno() {
   local turma=$1 login=$2
   local home="$RAIZ/$turma/$login"
-  local saida
+  local saida falha_banco=0
 
   validar "$turma" "$login" || return 1
 
@@ -185,6 +267,9 @@ function remover_aluno() {
   # Encerra sessões FTP abertas; sem isso o deluser recusa a remoção
   pkill -KILL -u "$login" 2> /dev/null
 
+  # Uma falha no banco não impede a remoção da conta: o erro fica no log, com o comando para remover à mão
+  remover_banco "$turma" "$login" || falha_banco=1
+
   if ! saida=$(deluser --remove-home "$login" 2>&1); then
     log ERRO "$turma/$login: o deluser falhou: $saida"
     return 1
@@ -196,6 +281,7 @@ function remover_aluno() {
   rmdir "$RAIZ/$turma" 2> /dev/null
 
   log INFO "$turma/$login: conta e arquivos removidos."
+  (( falha_banco == 0 ))
 }
 
 #### ------------------------------------------------------------------------
@@ -217,7 +303,7 @@ function processar_csv() {
   [[ -r $arquivo ]] || falhar "Não foi possível ler o arquivo \"$arquivo\"."
 
   if [[ $acao == "rm" ]]; then
-    confirmar "Remover TODAS as contas listadas em $arquivo, com os sites?" || { echo "Cancelado."; return 1; }
+    confirmar "Remover TODAS as contas listadas em $arquivo, com os sites e os bancos de dados?" || { echo "Cancelado."; return 1; }
   fi
 
   while IFS= read -r linha || [[ -n $linha ]]; do
@@ -259,7 +345,7 @@ function exibir_ajuda() {
   cat << AJUDA
 Uso:
   $(basename "$0") --add     <turma> <login>   Cria a conta de um aluno
-  $(basename "$0") --rm      <turma> <login>   Remove a conta e o site do aluno
+  $(basename "$0") --rm      <turma> <login>   Remove a conta, o site e o banco do aluno
   $(basename "$0") --add-csv <arquivo.csv>     Cria as contas listadas no CSV
   $(basename "$0") --rm-csv  <arquivo.csv>     Remove as contas listadas no CSV
   $(basename "$0") --help                      Mostra esta ajuda
@@ -298,7 +384,7 @@ function main() {
       criar_aluno "$2" "$3"
       ;;
     --rm)
-      confirmar "Remover a conta $2/$3 e TODOS os arquivos do site?" || { echo "Cancelado."; exit 1; }
+      confirmar "Remover a conta $2/$3, TODOS os arquivos do site e o banco de dados?" || { echo "Cancelado."; exit 1; }
       remover_aluno "$2" "$3"
       ;;
     --add-csv)
