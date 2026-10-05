@@ -180,6 +180,8 @@ details.passos { border-top: 1px solid var(--linha); padding-top: .6rem; margin-
 details.passos summary { cursor: pointer; font-weight: 700; color: var(--marca-clara); }
 details.passos ol, .texto-info ul { margin: .6rem 0 0; padding-left: 1.3rem; font-size: .93rem; }
 details.passos li, .texto-info li { margin-bottom: .4rem; }
+details.passos pre { margin: .6rem 0 0; padding: .7rem .9rem; overflow-x: auto; background: var(--realce-fundo); border: 1px solid var(--linha); border-radius: 6px; font-size: .85rem; line-height: 1.45; }
+details.passos pre code { font-size: inherit; }
 .texto-info p { margin: 0 0 .7rem; font-size: .95rem; }
 .etiqueta { display: inline-block; font-family: var(--ui); font-size: .72rem; font-weight: 700; letter-spacing: .02em; padding: .08rem .45rem; border-radius: 3px; background: var(--aviso-fundo); color: var(--tinta); margin-left: .5rem; vertical-align: middle; white-space: nowrap; }
 
@@ -371,6 +373,22 @@ turma01,cicranodsantos</div>
       <h2 id="t-endereco">Endereço do site</h2>
       <p class="endereco"><a id="link-site" target="_blank" rel="noopener"></a></p>
     </section>
+    <section id="sec-banco" aria-labelledby="t-banco" hidden>
+      <h2 id="t-banco">Banco de dados</h2>
+      <p class="dica">Você tem um banco de dados MariaDB só seu, que o seu site em PHP pode usar. Crie e edite as tabelas pelo phpMyAdmin.</p>
+      <p class="endereco"><a id="link-pma" target="_blank" rel="noopener"></a></p>
+      <dl class="dados-ftp">
+        <dt>Usuário</dt><dd id="banco-usuario"></dd>
+        <dt>Banco</dt><dd id="banco-nome"></dd>
+        <dt>Servidor</dt><dd>localhost</dd>
+        <dt>Senha</dt><dd><span class="nota">a do banco, diferente da senha deste painel e do FTP. A inicial é <code id="banco-senha-inicial"></code>: troque-a no phpMyAdmin, em <strong>Alterar senha</strong>.</span></dd>
+      </dl>
+      <details class="passos">
+        <summary>Como conectar no PHP</summary>
+        <pre><code id="banco-exemplo"></code></pre>
+        <p class="dica" style="margin-top:.6rem">Guarde a senha em um arquivo <code>.php</code> (por exemplo <code>conexao.php</code>): o servidor executa o arquivo e nunca mostra o conteúdo. Um arquivo <code>.txt</code> ou <code>.sql</code> na pasta do site pode ser baixado por qualquer pessoa. Se você trocar a senha do banco, atualize-a também no seu PHP.</p>
+      </details>
+    </section>
     <section aria-labelledby="t-ftp">
       <h2 id="t-ftp">Enviar pelo FTP</h2>
       <p class="dica">Além desta página, você pode enviar os arquivos com um programa de FTP, como o FileZilla.</p>
@@ -410,7 +428,7 @@ turma01,cicranodsantos</div>
 <dialog id="dlg-senha-aluno">
   <form id="form-senha" novalidate>
     <h3>Alterar senha</h3>
-    <p class="dica">A nova senha vale também para o FTP. Use pelo menos 8 caracteres, sem o seu login.</p>
+    <p class="dica" id="senha-dica"></p>
     <div class="campo">
       <label for="senha-atual">Senha atual</label>
       <input type="password" id="senha-atual" autocomplete="current-password">
@@ -464,6 +482,26 @@ function el(tag, props = {}, ...filhos) {
   return e;
 }
 function aviso(id, tipo, texto) { const a = $(id); a.className = "aviso " + tipo; a.textContent = texto; }
+function mostrarBanco(s) {
+  const secao = $("sec-banco");
+  secao.hidden = !s.phpmyadmin_porta;
+  if (secao.hidden) return;
+  const url = `http://${HOST_SITE}:${s.phpmyadmin_porta}/_phpmyadmin/`;
+  $("link-pma").href = url;
+  $("link-pma").textContent = "Abrir o phpMyAdmin (" + url + ")";
+  $("banco-usuario").textContent = s.login;
+  $("banco-nome").textContent = s.login;
+  $("banco-senha-inicial").textContent = s.senha_inicial;
+  $("banco-exemplo").textContent =
+    "<?php\n" +
+    "$pdo = new PDO(\n" +
+    `    'mysql:host=localhost;dbname=${s.login};charset=utf8mb4',\n` +
+    `    '${s.login}',\n` +
+    "    'SENHA_DO_BANCO',\n" +
+    "    [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]\n" +
+    ");";
+}
+
 function urlSite(turma, aluno, rel = "") {
   return `http://${HOST_SITE}/${turma}/${aluno}/${rel.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -537,6 +575,7 @@ function entrar(s) {
   if (s.papel === "docente") {
     $("titulo").textContent = "Contas de alunos";
     $("quem-texto").append("Docente: ", el("strong", { text: s.login }));
+    $("btn-abrir-senha").hidden = false;
     trocarTela("docente");
     document.querySelectorAll(".senha-inicial").forEach((c) => (c.textContent = s.senha_inicial));
     atualizarCaminhoDocente();
@@ -558,6 +597,7 @@ function entrar(s) {
     $("link-site").href = url; $("link-site").textContent = url;
     $("ftp-servidor").textContent = HOST_SITE; $("ftp-host-passo").textContent = HOST_SITE;
     $("ftp-usuario").textContent = s.login;
+    mostrarBanco(s);
     abrirPasta("");
   }
 }
@@ -647,7 +687,7 @@ function desenharLista() {
 }
 
 async function removerUm(turma, aluno) {
-  if (!await confirmar(`Remover ${aluno}?`, `A conta e o site /${turma}/${aluno}/ serão apagados e não podem ser recuperados.`, "Remover conta")) return;
+  if (!await confirmar(`Remover ${aluno}?`, `A conta, o site /${turma}/${aluno}/ e o banco de dados do aluno (se houver) serão apagados e não podem ser recuperados.`, "Remover conta")) return;
   try {
     const { dados } = await api("DELETE", `api/alunos/${encodeURIComponent(turma)}/${encodeURIComponent(aluno)}`);
     aviso("msg-individual", dados.status === "removido" ? "ok" : dados.status === "ignorado" ? "info" : "erro", `${aluno}: ${dados.mensagem}`);
@@ -657,10 +697,10 @@ async function removerUm(turma, aluno) {
 
 async function redefinirSenha(turma, aluno) {
   if (!await confirmar(`Redefinir a senha de ${aluno}?`,
-    `A senha volta a ser ${sessaoAtual.senha_inicial} e o aluno terá de criar uma nova no próximo acesso.`, "Redefinir senha", false)) return;
+    `A senha do painel e do FTP volta a ser ${sessaoAtual.senha_inicial} e o aluno terá de criar uma nova no próximo acesso. A senha do banco de dados também volta a ser ${sessaoAtual.senha_inicial}: se o site do aluno usa outra senha no PHP, ele precisará atualizá-la.`, "Redefinir senha", false)) return;
   try {
     const { ok, dados } = await api("POST", `api/alunos/${encodeURIComponent(turma)}/${encodeURIComponent(aluno)}/senha`);
-    aviso("msg-individual", ok ? "ok" : "erro", dados.mensagem || "Não foi possível redefinir a senha.");
+    aviso("msg-individual", !ok ? "erro" : (dados.banco === "indisponivel" || dados.banco === "sem_banco") ? "info" : "ok", dados.mensagem || "Não foi possível redefinir a senha.");
   } catch (e) { if (e.message !== "Sessão expirada.") aviso("msg-individual", "erro", e.message); }
 }
 
@@ -748,7 +788,7 @@ $("btn-lote").addEventListener("click", async () => {
   const pendentes = linhasLote.filter((l) => l.status === "pronta");
   if (!pendentes.length) return;
   if (acao === "rm" && !await confirmar(`Remover ${pendentes.length} conta(s)?`,
-    "Todas as contas prontas da tabela e seus sites serão apagados e não podem ser recuperados.", `Remover ${pendentes.length} conta(s)`)) return;
+    "Todas as contas prontas da tabela, seus sites e seus bancos de dados (se houver) serão apagados e não podem ser recuperados.", `Remover ${pendentes.length} conta(s)`)) return;
   const travar = (v) => { $("btn-lote").disabled = $("btn-limpar").disabled = v; document.querySelectorAll("input[name=acao]").forEach((r) => (r.disabled = v)); };
   travar(true);
   const prog = $("progresso-lote"); prog.hidden = false; prog.max = pendentes.length; prog.value = 0;
@@ -1019,6 +1059,9 @@ $("btn-limpar-notificacoes").addEventListener("click", () => {
 /* ---- senha ---- */
 $("btn-abrir-senha").addEventListener("click", () => {
   $("form-senha").reset(); aviso("msg-senha", "", "");
+  $("senha-dica").textContent = sessaoAtual.papel === "docente"
+    ? "A nova senha vale só para este painel e não altera a senha do SSH. Use pelo menos 8 caracteres, sem o seu login."
+    : "A nova senha vale também para o FTP e não altera a senha do banco de dados. Use pelo menos 8 caracteres, sem o seu login.";
   $("dlg-senha-aluno").showModal(); $("senha-atual").focus();
 });
 $("senha-cancelar").addEventListener("click", () => $("dlg-senha-aluno").close());
@@ -1030,10 +1073,12 @@ $("form-senha").addEventListener("submit", async (e) => {
   if (nova !== conf) { aviso("msg-senha", "erro", "A nova senha e a repetição estão diferentes."); $("senha-conf").select(); return; }
   $("btn-senha").disabled = true;
   try {
-    const { ok, dados } = await api("POST", "api/senha", { atual, nova });
+    const docente = sessaoAtual.papel === "docente";
+    const { ok, dados } = await api("POST", docente ? "api/senha-docente" : "api/senha", { atual, nova });
     if (ok) {
       $("form-senha").reset(); $("dlg-senha-aluno").close();
-      aviso("msg-arquivos", "ok", "Senha alterada. Use a nova senha no painel e no FTP.");
+      if (docente) aviso("msg-individual", "ok", "Senha do painel alterada. Use a nova senha no próximo acesso.");
+      else aviso("msg-arquivos", "ok", "Senha alterada. Use a nova senha no painel e no FTP.");
     }
     else aviso("msg-senha", "erro", dados.mensagem || "Não foi possível alterar a senha.");
   } catch (err) { if (err.message !== "Sessão expirada.") aviso("msg-senha", "erro", err.message); }
@@ -1051,8 +1096,9 @@ $("form-primeiro").addEventListener("submit", async (e) => {
     const { ok, dados } = await api("POST", "api/senha", { nova });
     if (ok) {
       $("form-primeiro").reset(); aviso("msg-primeiro", "", "");
-      sessaoAtual.trocar_senha = false;
-      entrar(sessaoAtual);
+      // Busca a sessão de novo: depois da troca, o servidor passa a informar o banco de dados
+      const r = await api("GET", "api/sessao");
+      entrar(r.ok ? r.dados : { ...sessaoAtual, trocar_senha: false });
       aviso("msg-arquivos", "ok", "Senha criada. Use a nova senha no painel e no FTP.");
     } else aviso("msg-primeiro", "erro", dados.mensagem || "Não foi possível salvar a senha.");
   } catch (err) { if (err.message !== "Sessão expirada.") aviso("msg-primeiro", "erro", err.message); }
