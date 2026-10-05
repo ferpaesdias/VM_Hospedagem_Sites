@@ -19,7 +19,8 @@ pelo PHP. Nesse caso a remoção é repetida como www-data. Nenhuma remoção
 Uso:
   painel-helper auth <login>             stdin: senha
   painel-helper senha <login>            stdin: senha_atual\nsenha_nova
-  painel-helper redefinir <login>        stdin: senha_nova
+  painel-helper senha-docente <login>    stdin: senha_atual\nsenha_nova (senha do painel, em docentes.htpasswd)
+  painel-helper redefinir <login>        stdin: senha_nova (conta Linux e usuário do MariaDB)
   painel-helper ls <login> [caminho]
   painel-helper put <login> <caminho>    stdin: conteúdo do arquivo
   painel-helper mkdir <login> <caminho>
@@ -45,6 +46,8 @@ SHELL_FTP = "/bin/shell_ftp"
 DOCENTES = "/etc/painel/docentes.htpasswd"
 RE_LOGIN = re.compile(r"^[a-z][a-z0-9]{0,31}$")
 MAX_ARQUIVO = 25 * 1024 * 1024
+MARIADB = shutil.which("mariadb") or "/usr/bin/mariadb"
+HTPASSWD = shutil.which("htpasswd") or "/usr/bin/htpasswd"
 
 
 class Erro(Exception):
@@ -115,6 +118,49 @@ def definir_senha(login, nova):
     r = subprocess.run(["chpasswd"], input=f"{login}:{nova}\n", text=True, capture_output=True)
     if r.returncode != 0:
         raise Erro("O sistema recusou a nova senha.")
+
+
+def definir_senha_docente(login, nova):
+    """Grava a nova senha (bcrypt) do docente em docentes.htpasswd.
+
+    Usa o próprio htpasswd, o mesmo do guia de instalação. A senha vai pela
+    entrada padrão (-i), nunca como argumento. O htpasswd só troca a linha do
+    docente e mantém as dos outros.
+    """
+    r = subprocess.run([HTPASSWD, "-i", "-B", "-C", "10", DOCENTES, login],
+                       input=nova + "\n", text=True, capture_output=True)
+    if r.returncode != 0:
+        raise Erro("Não foi possível gravar a nova senha. Avise o administrador.")
+    os.chmod(DOCENTES, 0o600)
+
+
+def redefinir_banco(login, nova):
+    """Muda a senha do usuário do MariaDB do aluno (mesmo nome do login).
+
+    O helper roda como root, então o mariadb entra pelo unix_socket, sem senha.
+    O login já passou por RE_LOGIN (só letras minúsculas e números), então pode
+    ir direto no SQL. A senha vai pela entrada padrão, nunca como argumento.
+
+    Retorna: "redefinido", "sem_mariadb", "sem_banco" (o aluno não tem usuário
+    no banco) ou "indisponivel" (o MariaDB não respondeu).
+    """
+    if not os.access(MARIADB, os.X_OK):
+        return "sem_mariadb"
+    try:
+        r = subprocess.run(
+            [MARIADB, "--batch", "--skip-column-names", "--execute",
+             f"SELECT COUNT(*) FROM mysql.user WHERE User='{login}' AND Host='localhost'"],
+            capture_output=True, text=True, timeout=30)
+        if r.returncode != 0:
+            return "indisponivel"
+        if r.stdout.strip() != "1":
+            return "sem_banco"
+        senha_sql = nova.replace("\\", "\\\\").replace("'", "\\'")
+        r = subprocess.run([MARIADB], input=f"ALTER USER '{login}'@'localhost' IDENTIFIED BY '{senha_sql}';\n",
+                           capture_output=True, text=True, timeout=30)
+    except (OSError, subprocess.TimeoutExpired):
+        return "indisponivel"
+    return "redefinido" if r.returncode == 0 else "indisponivel"
 
 
 # ---------------------------------------------------------------- contas
@@ -350,6 +396,19 @@ def main():
             sair_ok({"papel": "aluno", "turma": turma})
         raise Erro("Login ou senha incorretos.")
 
+    if cmd == "senha-docente":
+        atual, nova = ler_stdin_linhas(2)
+        h = hash_docente(login) if RE_LOGIN.match(login) else None
+        if h is None:
+            raise Erro("Docente não encontrado.")
+        if not confere_hash(atual, h):
+            raise Erro("A senha atual está incorreta.")
+        if atual == nova:
+            raise Erro("A nova senha precisa ser diferente da atual.")
+        validar_nova(login, nova)
+        definir_senha_docente(login, nova)
+        sair_ok()
+
     pw, _ = conta_aluno(login)
 
     if cmd == "senha":
@@ -365,7 +424,8 @@ def main():
         nova = ler_stdin_linhas(1)[0]
         validar_nova(login, nova)
         definir_senha(login, nova)
-        sair_ok()
+        # A senha do banco é independente da conta Linux; "redefinir" volta as duas
+        sair_ok({"banco": redefinir_banco(login, nova)})
 
     operacoes = {"ls": cmd_ls, "put": cmd_put, "mkdir": cmd_mkdir}
     if cmd not in operacoes and cmd not in ("rm", "esvaziar"):
