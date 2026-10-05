@@ -37,6 +37,9 @@ MAX_ARQUIVO = 20 * 1024 * 1024
 # Senha de toda conta nova (e de toda senha redefinida). O aluno é obrigado
 # a trocá-la no primeiro acesso ao painel.
 SENHA_INICIAL = os.environ.get("PAINEL_SENHA_INICIAL", "123@mudar")
+# Porta do phpMyAdmin (config/nginx-phpmyadmin). O link só aparece no painel do aluno se ele estiver instalado.
+PORTA_PHPMYADMIN = int(os.environ.get("PAINEL_PORTA_PHPMYADMIN", "8081"))
+DIR_PHPMYADMIN = "/usr/share/phpmyadmin"
 
 RE_TURMA = re.compile(r"^[a-zA-Z0-9]{1,32}$")
 RE_LOGIN = re.compile(r"^[a-z][a-z0-9]{0,31}$")
@@ -199,6 +202,10 @@ def sessao():
              "trocar_senha": bool(session.get("trocar_senha"))}
     if session["papel"] == "docente":
         dados["senha_inicial"] = SENHA_INICIAL
+    elif not session.get("trocar_senha"):
+        # O aluno já conhece a senha inicial (entrou com ela). Ela também é a inicial do banco.
+        dados["senha_inicial"] = SENHA_INICIAL
+        dados["phpmyadmin_porta"] = PORTA_PHPMYADMIN if os.path.isdir(DIR_PHPMYADMIN) else None
     return jsonify(dados)
 
 
@@ -274,7 +281,7 @@ def remover(turma, aluno):
     r = executar_script("--rm", turma, aluno)
     if conta(aluno) is not None:
         return "erro", ultima_linha(r) or "O script não concluiu a remoção."
-    return "removido", "Conta e arquivos do site removidos."
+    return "removido", "Conta, arquivos do site e banco de dados (se houver) removidos."
 
 
 @app.get("/api/alunos")
@@ -313,9 +320,19 @@ def redefinir_senha(turma, aluno):
     pw = conta(aluno)
     if validar(turma, aluno) or pw is None or turma_do_aluno(pw) != turma:
         raise ErroApi("Aluno não encontrado nesta turma.", 404)
-    helper("redefinir", aluno, entrada=SENHA_INICIAL.encode())
-    log.info("%s redefiniu senha de %s/%s", quem(), turma, aluno)
-    return jsonify(mensagem=f"Senha de {aluno} redefinida para {SENHA_INICIAL}. O aluno deverá trocá-la no próximo acesso.")
+    # Conta criada antes do MariaDB não tem banco: o script (idempotente, sem mexer na conta
+    # nem nos arquivos) cria o que falta. O resultado é conferido pelo helper, logo abaixo.
+    executar_script("--add", turma, aluno)
+    banco = helper("redefinir", aluno, entrada=SENHA_INICIAL.encode()).get("banco")
+    log.info("%s redefiniu senha de %s/%s (banco: %s)", quem(), turma, aluno, banco)
+    mensagem = f"Senha de {aluno} redefinida para {SENHA_INICIAL}. O aluno deverá trocá-la no próximo acesso."
+    if banco == "redefinido":
+        mensagem += f" A senha do banco de dados também voltou para {SENHA_INICIAL}."
+    elif banco == "indisponivel":
+        mensagem += " Atenção: a senha do banco de dados NÃO foi redefinida (o MariaDB não respondeu). Veja o log do painel."
+    elif banco == "sem_banco":
+        mensagem += " Esse aluno não tem banco de dados (veja /var/log/vm_hospedagem.log)."
+    return jsonify(mensagem=mensagem, banco=banco)
 
 
 @app.post("/api/lote")
@@ -340,6 +357,30 @@ def lote():
 # ---------------------------------------------------------------------------
 # Aluno: senha e arquivos
 # ---------------------------------------------------------------------------
+@app.post("/api/senha-docente")
+@requer("docente")
+def trocar_senha_docente():
+    d = request.get_json(silent=True) or {}
+    atual, nova = d.get("atual", ""), d.get("nova", "")
+    if not all(isinstance(x, str) and x and "\n" not in x and len(x) <= 128 for x in (atual, nova)):
+        raise ErroApi("Preencha a senha atual e a nova senha.")
+    login_ = session["login"]
+    # Mesmo limite do login: uma sessão roubada não consegue adivinhar a senha atual
+    if bloqueado(login_):
+        raise ErroApi("Muitas tentativas erradas. Aguarde 5 minutos.", 429)
+    try:
+        helper("senha-docente", login_, entrada=f"{atual}\n{nova}\n".encode())
+    except ErroApi as e:
+        if e.mensagem == "A senha atual está incorreta.":
+            registrar_falha(login_)
+            log.warning("senha atual errada ao trocar a senha: %s ip=%s", quem(), ip())
+        raise
+    with trava_tentativas:
+        tentativas.pop(login_, None)
+    log.info("%s alterou a própria senha", quem())
+    return jsonify(ok=True)
+
+
 @app.post("/api/senha")
 @requer("aluno", liberar_troca=True)
 def trocar_senha():
