@@ -311,7 +311,7 @@ mariadb-dump --all-databases > backup_bancos.sql
 Crie uma conta de aluno de teste. Como o MariaDB já está instalado, o banco é criado junto:
 
 ```bash
-gerenciar_usuarios_ftp --add turma01 teste
+Cookbook/gerenciar_usuarios_ftp --add turma01 teste
 ```
 
 Output:
@@ -390,7 +390,7 @@ Teste o login pelo navegador. Acesse `http://[IP]:8081/` com o usuário `teste` 
 Ao terminar, remova a conta de teste (o banco e o usuário do banco são removidos junto):
 
 ```bash
-gerenciar_usuarios_ftp --rm turma01 teste
+Cookbook/gerenciar_usuarios_ftp --rm turma01 teste
 ```
 
 Output:
